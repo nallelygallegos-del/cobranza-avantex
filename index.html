@@ -1423,7 +1423,7 @@ let personaActual = localStorage.getItem('avx_persona_actual') || null;
 
 function setPersonaActual(pid){
   personaActual = pid;
-  localStorage.setItem('avx_persona_actual', pid);
+  safeSetItem('avx_persona_actual', pid);
   renderSbUser();
 }
 
@@ -1448,7 +1448,7 @@ function renderSbUser(){
 // vea la información en vivo sin tener que configurar nada manualmente).
 const DEFAULT_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyAeACczW15aVunqBwi-1K82ylqq8DMi3t0lXR74rjRkOvJcpVILGPNOQjV9IufUp2g/exec';
 if(!localStorage.getItem('avx_sheets_url')){
-  localStorage.setItem('avx_sheets_url', DEFAULT_SHEETS_URL);
+  safeSetItem('avx_sheets_url', DEFAULT_SHEETS_URL);
 }
 
 let registros=JSON.parse(localStorage.getItem('avx_regs')||'[]');
@@ -1466,7 +1466,42 @@ const today=()=>toLocalISO(new Date());
 const fmtDate=d=>{if(!d)return 'Sin fecha';const dt=new Date(d+'T12:00');return isNaN(dt)?'Sin fecha':dt.toLocaleDateString('es-MX',{weekday:'short',day:'numeric',month:'short'})};
 const fmt=n=>!n||n===0?'$0':'$'+Number(n).toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:0});
 const fmtK=n=>n>=1000000?(n/1000000).toFixed(1)+'M':n>=1000?(n/1000).toFixed(0)+'K':String(Math.round(n||0));
-const save=()=>{localStorage.setItem('avx_regs',JSON.stringify(registros));localStorage.setItem('avx_proms',JSON.stringify(promesas))};
+// Envoltura segura de localStorage.setItem: antes, si el navegador se quedaba sin espacio
+// (QuotaExceededError), el guardado fallaba en silencio -- el usuario le daba "Guardar" y
+// no pasaba nada, sin ningún aviso. Ahora: 1) si falla por espacio lleno, primero recorta
+// el histórico de cartera local (ya está respaldado en Sheets, así que es seguro recortarlo)
+// y reintenta; 2) si aun así falla, avisa claramente con un toast en vez de fallar callado.
+function safeSetItem(key, value){
+  try{
+    localStorage.setItem(key, value);
+    return true;
+  }catch(e){
+    const esQuota = e && (e.name==='QuotaExceededError' || e.code===22 || e.code===1014);
+    if(esQuota){
+      try{
+        if(typeof carteraHistorico==='object' && carteraHistorico){
+          Object.keys(carteraHistorico).forEach(id=>{
+            const arr = carteraHistorico[id];
+            if(Array.isArray(arr) && arr.length>12) carteraHistorico[id] = arr.slice(-12);
+          });
+          if(key!=='avx_cartera_historico'){
+            localStorage.setItem('avx_cartera_historico', JSON.stringify(carteraHistorico));
+          }
+        }
+        localStorage.setItem(key, value);
+        return true;
+      }catch(e2){
+        console.error('avx: almacenamiento local lleno, no se pudo guardar', key, e2);
+        if(typeof toast==='function') toast('❌ No se pudo guardar: el almacenamiento del navegador está lleno. Sincroniza con Sheets y avisa a Sistemas/Nallely para liberar espacio.','warn');
+        return false;
+      }
+    }
+    console.error('avx: error guardando en localStorage', key, e);
+    if(typeof toast==='function') toast('❌ Error al guardar localmente: '+e.message,'warn');
+    return false;
+  }
+}
+const save=()=>{safeSetItem('avx_regs',JSON.stringify(registros));safeSetItem('avx_proms',JSON.stringify(promesas))};
 const week=()=>{const d=new Date(),day=d.getDay(),diff=d.getDate()-day+(day===0?-6:1),mon=new Date(d);mon.setDate(diff);return Array.from({length:5},(_,i)=>{const dd=new Date(mon);dd.setDate(mon.getDate()+i);return toLocalISO(dd)});};
 
 // -- SYNC STATE --
@@ -1635,7 +1670,7 @@ async function syncFromSheets(silent){
     }
 
     save();
-    localStorage.setItem('avx_last_sync', Date.now().toString());
+    safeSetItem('avx_last_sync', Date.now().toString());
     renderSyncBadge();
     renderBandeja();renderDashCharts();renderHist();
     if(!silent) showSyncBanner('✓ '+registros.length+' registros cargados desde Sheets','ok');
@@ -2146,8 +2181,8 @@ let sorFacturas = (function(){
   const savedVersion = localStorage.getItem('avx_soriana_version');
   if(saved.length > 0 && savedVersion === SORIANA_VERSION) return saved;
   // Versión nueva o sin datos: cargar desde preload
-  localStorage.setItem('avx_soriana', JSON.stringify(SORIANA_PRELOAD));
-  localStorage.setItem('avx_soriana_version', SORIANA_VERSION);
+  safeSetItem('avx_soriana', JSON.stringify(SORIANA_PRELOAD));
+  safeSetItem('avx_soriana_version', SORIANA_VERSION);
   return SORIANA_PRELOAD;
 })();
 
@@ -2155,7 +2190,7 @@ const FORMATOS_SOR = {
   SH:'Híper', SM:'Mercado', SS:'Súper', SE:'Express', 'City Club':'City Club', Mall:'Mall'
 };
 
-function saveSor(){ localStorage.setItem('avx_soriana', JSON.stringify(sorFacturas)); }
+function saveSor(){ safeSetItem('avx_soriana', JSON.stringify(sorFacturas)); }
 
 // Limpiar nombres con encoding roto al cargar
 sorFacturas.forEach(function(f){
@@ -2918,7 +2953,7 @@ async function syncCarteraToSheets(silent){
     if(verificado.ok){
       carteraSyncStatus = 'ok';
       carteraSyncVerifiedAt = new Date().toISOString();
-      localStorage.setItem('avx_cartera_sync_verified', carteraSyncVerifiedAt);
+      safeSetItem('avx_cartera_sync_verified', carteraSyncVerifiedAt);
       if(!silent) showSyncBanner('✓ Cartera y su histórico guardados en Sheets · '+carteraData.length+' clientes','ok');
     } else {
       carteraSyncStatus = 'error';
@@ -2974,7 +3009,7 @@ async function syncCarteraFromSheets(silent){
       const sheetIds = new Set(data.cartera.map(c=>c.id));
       const soloLocal = carteraData.filter(c=>!sheetIds.has(c.id));
       carteraData = [...Object.values(sheetMap), ...soloLocal];
-      localStorage.setItem('avx_cartera', JSON.stringify(carteraData));
+      safeSetItem('avx_cartera', JSON.stringify(carteraData));
     }
 
     if(data.carteraHistorico && Object.keys(data.carteraHistorico).length){
@@ -2988,13 +3023,13 @@ async function syncCarteraFromSheets(silent){
         });
         local.sort((a,b)=>a.fecha<b.fecha?-1:1);
       });
-      localStorage.setItem('avx_cartera_historico', JSON.stringify(carteraHistorico));
+      safeSetItem('avx_cartera_historico', JSON.stringify(carteraHistorico));
     }
 
     if(data.cartera && data.cartera.length){
       carteraSyncStatus = 'ok';
       carteraSyncVerifiedAt = new Date().toISOString();
-      localStorage.setItem('avx_cartera_sync_verified', carteraSyncVerifiedAt);
+      safeSetItem('avx_cartera_sync_verified', carteraSyncVerifiedAt);
     }
 
     renderCartera();
@@ -3563,7 +3598,7 @@ function guardarSnapshotHistorico(datos, fechaISO){
     arr.sort((a,b)=>a.fecha<b.fecha?-1:1);
     if(arr.length>52) arr.splice(0, arr.length-52);
   });
-  localStorage.setItem('avx_cartera_historico', JSON.stringify(carteraHistorico));
+  safeSetItem('avx_cartera_historico', JSON.stringify(carteraHistorico));
 }
 
 function parseMoneyStr(s){
@@ -3667,8 +3702,8 @@ function importarCartera(input){
 
     carteraData = datos;
     carteraUpdatedAt = new Date().toISOString();
-    localStorage.setItem('avx_cartera', JSON.stringify(carteraData));
-    localStorage.setItem('avx_cartera_updated', carteraUpdatedAt);
+    safeSetItem('avx_cartera', JSON.stringify(carteraData));
+    safeSetItem('avx_cartera_updated', carteraUpdatedAt);
     guardarSnapshotHistorico(datos, carteraUpdatedAt);
     toast(`✓ Cartera cargada · ${datos.length} clientes`);
     renderCartera();
@@ -3991,8 +4026,9 @@ function abrirGestionCartera(clienteId){
 }
 
 function guardarGestionCartera(clienteId){
+ try{
   const idx = carteraData.findIndex(c=>c.id===clienteId);
-  if(idx<0) return;
+  if(idx<0){ toast('❌ No se encontró este cliente en Cartera (puede que se haya actualizado la lista mientras tenías el formulario abierto). Cierra y vuelve a abrir la gestión.','warn'); return; }
   const c = carteraData[idx];
   const gPrev = c.gestion || {};
 
@@ -4040,7 +4076,12 @@ function guardarGestionCartera(clienteId){
     promesaId,
     updatedAt: new Date().toISOString(),
   };
-  localStorage.setItem('avx_cartera', JSON.stringify(carteraData));
+  const guardadoOk = safeSetItem('avx_cartera', JSON.stringify(carteraData));
+  if(!guardadoOk){
+    // safeSetItem ya mostró el toast de error explicando por qué. No cerramos el modal
+    // para que no se pierda lo que la persona ya escribió y pueda reintentar.
+    return;
+  }
   toast(fechaCompromiso ? '✓ Gestión guardada y promesa sincronizada' : '✓ Gestión guardada');
   closeGestionCartera();
   renderCartera();
@@ -4049,6 +4090,10 @@ function guardarGestionCartera(clienteId){
   if(document.getElementById('sec-focos').classList.contains('active')) renderFocos();
   // Respaldo silencioso a Sheets cada vez que se captura gestión -- no depende de que te acuerdes de sincronizar
   if(localStorage.getItem('avx_sheets_url')) syncCarteraToSheets(true);
+ }catch(err){
+  console.error('Error guardando gestión de cartera', err);
+  toast('❌ No se pudo guardar la gestión: '+(err && err.message ? err.message : err)+'. Intenta de nuevo; si se repite, avisa a Nallely con este mensaje.','warn');
+ }
 }
 
 function cobrarPromesaDesdeCartera(clienteId){
@@ -4881,7 +4926,7 @@ function toggleSheets(){
 function updateSheetStatus(ok){
   const el=document.getElementById('shStatus');
   if(el) el.innerHTML=ok?'<div class="dot-live"></div><span>Conectado · registros se envían automáticamente</span>':'<div class="dot-pulse"></div><span>Sin configurar</span>';
-  if(ok) localStorage.setItem('avx_last_sync', Date.now().toString());
+  if(ok) safeSetItem('avx_last_sync', Date.now().toString());
   renderSyncBadge();
 }
 function renderSyncBadge(){
@@ -4915,14 +4960,14 @@ setInterval(()=>{ if(localStorage.getItem('avx_sheets_url')) syncSorianaFromShee
 function guardarURL(){
   const url=document.getElementById('sheetsURL').value.trim();
   if(!url.startsWith('https://script.google.com')){toast('URL inválida · debe ser de Apps Script','warn');return;}
-  localStorage.setItem('avx_sheets_url',url);updateSheetStatus(true);toast('✓ Conectado a Google Sheets');
+  safeSetItem('avx_sheets_url',url);updateSheetStatus(true);toast('✓ Conectado a Google Sheets');
 }
 async function testURL(){
   const url=document.getElementById('sheetsURL').value.trim();
   const r=document.getElementById('testResult');r.style.display='block';
   r.style.cssText='display:block;padding:.75rem;border-radius:var(--r);font-size:13px;background:var(--gold-lt);color:#92450A;margin-top:10px';
   r.textContent='⏳ Probando...';
-  try{await fetch(url,{method:'GET',mode:'no-cors'});r.style.cssText='display:block;padding:.75rem;border-radius:var(--r);font-size:13px;background:var(--sage-lt);color:var(--sage);margin-top:10px';r.textContent='✅ Conexión exitosa';localStorage.setItem('avx_sheets_url',url);updateSheetStatus(true);}
+  try{await fetch(url,{method:'GET',mode:'no-cors'});r.style.cssText='display:block;padding:.75rem;border-radius:var(--r);font-size:13px;background:var(--sage-lt);color:var(--sage);margin-top:10px';r.textContent='✅ Conexión exitosa';safeSetItem('avx_sheets_url',url);updateSheetStatus(true);}
   catch(e){r.style.cssText='display:block;padding:.75rem;border-radius:var(--r);font-size:13px;background:var(--wine-lt);color:var(--wine);margin-top:10px';r.textContent='❌ No se pudo conectar · verifica la URL y el acceso';}
 }
 async function enviarSheets(reg){
