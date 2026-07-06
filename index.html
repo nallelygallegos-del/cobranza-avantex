@@ -1492,7 +1492,7 @@ function safeSetItem(key, value){
         // sin caber, recortamos a los últimos 90 días. El histórico completo sigue en Sheets,
         // así que no se pierde información, solo se libera espacio local.
         if(key==='avx_regs' && typeof registros!=='undefined' && Array.isArray(registros)){
-          const corte = new Date(); corte.setDate(corte.getDate()-90);
+          const corte = new Date(); corte.setDate(corte.getDate()-60);
           const corteStr = corte.toISOString().slice(0,10);
           registros = registros.filter(r=>r.fecha>=corteStr);
           value = JSON.stringify(registros);
@@ -1616,12 +1616,14 @@ async function syncFromSheets(silent){
     // Merge registros -- deduplicate by id
     if(data.registros && data.registros.length){
       const localIds = new Set(registros.map(r=>String(r.id)));
+      const vistosEnEsteLote = new Set(); // evita que filas duplicadas EN LA MISMA SHEET se copien varias veces
       let added = 0;
       data.registros.forEach(raw => {
         // Normalizar keys a minúsculas (el Sheet puede tener MAYÚSCULAS)
         const r = {};
         Object.keys(raw).forEach(k => r[k.toLowerCase().trim()] = raw[k]);
-        if(!localIds.has(String(r.id))){
+        if(!localIds.has(String(r.id)) && !vistosEnEsteLote.has(String(r.id))){
+          vistosEnEsteLote.add(String(r.id));
           r.llamadas = Number(r.llamadas)||0;
           r.monto = Number(r.monto)||0;
           r.cobrado = Number(r.cobrado)||0;
@@ -1646,7 +1648,7 @@ async function syncFromSheets(silent){
     // El histórico COMPLETO sigue viviendo en Sheets siempre; aquí solo cuidamos el caché
     // local de cada persona, que es lo único que puede desbordar la cuota del navegador.
     (function limitarRegistrosLocal(){
-      const DIAS_A_CONSERVAR_LOCAL = 180;
+      const DIAS_A_CONSERVAR_LOCAL = 365;
       const corte = new Date();
       corte.setDate(corte.getDate() - DIAS_A_CONSERVAR_LOCAL);
       const corteStr = corte.toISOString().slice(0,10);
