@@ -1488,6 +1488,15 @@ function safeSetItem(key, value){
             localStorage.setItem('avx_cartera_historico', JSON.stringify(carteraHistorico));
           }
         }
+        // Último recurso: si lo que se está guardando son los registros diarios y siguen
+        // sin caber, recortamos a los últimos 90 días. El histórico completo sigue en Sheets,
+        // así que no se pierde información, solo se libera espacio local.
+        if(key==='avx_regs' && typeof registros!=='undefined' && Array.isArray(registros)){
+          const corte = new Date(); corte.setDate(corte.getDate()-90);
+          const corteStr = corte.toISOString().slice(0,10);
+          registros = registros.filter(r=>r.fecha>=corteStr);
+          value = JSON.stringify(registros);
+        }
         localStorage.setItem(key, value);
         return true;
       }catch(e2){
@@ -1632,6 +1641,21 @@ async function syncFromSheets(silent){
       });
       if(added>0) registros.sort((a,b)=>b.fecha>a.fecha?1:-1);
     }
+
+    // Limitar el histórico local de registros para no llenar el localStorage del navegador.
+    // El histórico COMPLETO sigue viviendo en Sheets siempre; aquí solo cuidamos el caché
+    // local de cada persona, que es lo único que puede desbordar la cuota del navegador.
+    (function limitarRegistrosLocal(){
+      const DIAS_A_CONSERVAR_LOCAL = 180;
+      const corte = new Date();
+      corte.setDate(corte.getDate() - DIAS_A_CONSERVAR_LOCAL);
+      const corteStr = corte.toISOString().slice(0,10);
+      const antes = registros.length;
+      registros = registros.filter(r => r.fecha >= corteStr);
+      if(registros.length < antes){
+        console.log('avx: recorte local de registros', antes, '->', registros.length, '(el histórico completo sigue en Sheets)');
+      }
+    })();
 
     // Replace promesas from Sheets (source of truth)
     if(data.promesas && data.promesas.length){
