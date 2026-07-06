@@ -1662,7 +1662,19 @@ async function syncFromSheets(silent){
     // Replace promesas from Sheets (source of truth)
     if(data.promesas && data.promesas.length){
       const sheetsIds = new Set(data.promesas.map(p=>String(p.id)));
-      const localOnly = promesas.filter(p=>!sheetsIds.has(String(p.id)));
+      // Solo protegemos una promesa "solo local" (que ya no está en Sheets) si se creó
+      // hace muy poco -- por ejemplo, alguien la capturó sin internet y aún no sincroniza.
+      // Si es vieja y ya no está en Sheets, lo más probable es que se haya borrado a
+      // propósito (como el caso de las duplicadas), así que ya no la revivimos.
+      const HORAS_GRACIA_LOCAL = 48;
+      const limiteGracia = Date.now() - HORAS_GRACIA_LOCAL*3600*1000;
+      const localOnly = promesas.filter(p=>{
+        if(sheetsIds.has(String(p.id))) return false;
+        // createdAt es fecha 'YYYY-MM-DD'; si no existe, usamos el id (timestamp) como respaldo
+        const creada = p.createdAt ? new Date(p.createdAt+'T12:00:00').getTime() : Number(p.id);
+        if(isNaN(creada)) return false; // formato desconocido -- más seguro descartarla que revivirla para siempre
+        return creada >= limiteGracia;
+      });
       // Sanear fechas al recibir de Sheets
       const sanitizeFecha = (f) => {
         if(!f) return '';
