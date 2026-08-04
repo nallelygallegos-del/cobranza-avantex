@@ -442,11 +442,6 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
       <span class="sb-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg></span>
       Historial
     </button>
-    <button class="sb-item" onclick="showSec('soriana',this)">
-      <span class="sb-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg></span>
-      Soriana MIGO/MIRO
-      <span id="sorianaDot" style="display:none;width:7px;height:7px;border-radius:50%;background:#DC2626;margin-left:auto"></span>
-    </button>
     <button class="sb-item" onclick="showSec('calendario',this)">
       <span class="sb-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
       Calendario
@@ -505,7 +500,7 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
   <div class="persona-row" id="personaRow">
     <button class="p-btn active" data-id="diana" onclick="selP(this)"><div class="p-av" style="background:#2563EB">DR</div>Diana</button>
     <button class="p-btn" data-id="aldo" onclick="selP(this)"><div class="p-av" style="background:#5F7857">AL</div>Aldo</button>
-    <button class="p-btn" data-id="karina" onclick="selP(this)"><div class="p-av" style="background:#7C3AED">KL</div>Karina</button>
+    <button class="p-btn" data-id="karina" onclick="selP(this)"><div class="p-av" style="background:#7C3AED">MD</div>Marco</button>
     <button class="p-btn" data-id="nallely" onclick="selP(this)"><div class="p-av" style="background:#0F766E">NG</div>Nallely</button>
   </div>
 
@@ -608,7 +603,7 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
         <option value="">Todo el equipo</option>
         <option value="diana">Diana Rodríguez</option>
         <option value="aldo">Aldo Luna</option>
-        <option value="karina">Karina Llanes</option>
+        <option value="karina">Marco Alejandro Díaz</option>
         <option value="nallely">Nallely Gallegos</option>
       </select>
       <button class="btn btn-primary btn-sm" onclick="syncFromSheets()">
@@ -710,7 +705,7 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
       <option value="">Todas</option>
       <option value="diana">Diana</option>
       <option value="aldo">Aldo</option>
-      <option value="karina">Karina</option>
+      <option value="karina">Marco</option>
       <option value="nallely">Nallely</option>
     </select>
     <button class="btn btn-ghost btn-sm" onclick="clearFilt()">✕ Limpiar</button>
@@ -732,166 +727,6 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
   </div>
 </div>
 
-<!-- ═══ SORIANA MIGO/MIRO ═══ -->
-<div id="sec-soriana" class="sec">
-  <div class="topbar">
-    <div>
-      <div class="topbar-title">Soriana · MIGO / MIRO</div>
-      <div class="topbar-sub" id="sorianaSubtitle">Control de facturas y liberación de pagos</div>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <select class="tb-select" id="sorMesFilter" onchange="renderSoriana()">
-        <option value="">Todos los meses</option>
-        <option value="2026-06">Junio 2026</option>
-        <option value="2026-05">Mayo 2026</option>
-      </select>
-      <select class="tb-select" id="sorEstFilter" onchange="renderSoriana()">
-        <option value="">Todas</option>
-        <option value="liberada">✅ Liberadas MIGO+MIRO</option>
-        <option value="liberada_sinServ">🟡 Liberadas sin servicio</option>
-        <option value="cancelada">🔴 En proceso cancelación</option>
-        <option value="pendiente">🟠 Pendientes liberación</option>
-        <option value="duplicada">Duplicadas</option>
-      </select>
-      <select class="tb-select" id="sorFechaCompFilter" onchange="renderSoriana()" title="Filtrar por si tiene fecha compromiso de pago">
-        <option value="">Fecha compromiso: todas</option>
-        <option value="con">📅 Con fecha compromiso</option>
-        <option value="sin">⚪ Sin fecha compromiso</option>
-      </select>
-      <!-- Buscador -->
-      <div style="display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:4px 10px">
-        <span style="font-size:13px;color:var(--ink3)">🔍</span>
-        <input type="text" id="sorBusqueda" placeholder="Buscar folio, sucursal o no. pedido..." oninput="renderSoriana()" style="border:none;background:none;font-size:13px;width:200px;outline:none;color:var(--ink)">
-        <button onclick="document.getElementById('sorBusqueda').value='';renderSoriana()" style="border:none;background:none;cursor:pointer;color:var(--ink3);font-size:13px;padding:0">✕</button>
-      </div>
-      <button class="btn btn-primary btn-sm" onclick="abrirModalSoriana(null)">+ Nueva</button>
-      <label class="btn btn-ghost btn-sm" style="cursor:pointer;background:#EAF1FD;border-color:#9DB8C9;color:#1E40AF" title="Subir Excel de fechas de pago del portal Soriana">
-        📅 Fechas pago<input type="file" id="sorFechasPagoFile" accept=".xlsx,.xls" style="display:none" onchange="importarFechasPagoSoriana(this)">
-      </label>
-      <button class="btn btn-ghost btn-sm" onclick="syncSorianaToSheets()" title="Guardar en Google Sheets" style="background:#E8F5E9;border-color:#A5D6A7;color:#2E7D32">☁️ Sheets</button>
-      <button class="btn btn-ghost btn-sm" onclick="syncSorianaFromSheets()" title="Cargar desde Sheets" style="color:#1565C0">⬇️ Sheets</button>
-      <button class="btn btn-ghost btn-sm" onclick="exportarSorianaBackup()" title="Descargar backup JSON">💾 Backup</button>
-      <label class="btn btn-ghost btn-sm" style="cursor:pointer" title="Restaurar desde backup JSON">
-        📂 Restaurar<input type="file" accept=".json" style="display:none" onchange="importarSorianaBackup(this)">
-      </label>
-      <label class="btn btn-ghost btn-sm" style="cursor:pointer" title="Importar CSV">
-        📥 CSV<input type="file" id="sorImportFile" accept=".csv,.xlsx,.xls" style="display:none" onchange="importarSoriana(this)">
-      </label>
-      <button class="btn btn-ghost btn-sm" onclick="exportarSorianaExcel()">📊 Excel</button>
-      <button class="btn btn-ghost btn-sm" onclick="exportarSoriana()">📄 PDF</button>
-    </div>
-  </div>
-  <div class="page">
-    <!-- KPIs -->
-    <div id="sorKpis" style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:1rem"></div>
-    <!-- KPIs de cobro y fecha compromiso -->
-    <div id="sorKpis2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem"></div>
-    <!-- Barra de progreso liberación -->
-    <div id="sorProgreso" style="background:white;border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1rem"></div>
-    <!-- Tabla -->
-    <div style="background:white;border:1px solid var(--border);border-radius:10px;overflow:hidden">
-      <div style="overflow-x:auto">
-        <table class="dt dt-compact" id="sorTable" style="min-width:100%">
-          <thead>
-            <tr>
-              <th style="min-width:75px">Factura</th>
-              <th style="min-width:95px">Pedido / Tienda</th>
-              <th style="min-width:130px">Sucursal</th>
-              <th style="min-width:72px;text-align:right">Monto</th>
-              <th style="min-width:48px;text-align:center">Portal</th>
-              <th style="min-width:115px;text-align:center">MIRO</th>
-              <th style="min-width:115px;text-align:center">MIGO</th>
-              <th style="min-width:85px;text-align:center">Compromiso / Cobro</th>
-              <th style="min-width:100px;text-align:center">Estado</th>
-              <th style="width:38px;text-align:center;position:sticky;right:0;background:white;box-shadow:-2px 0 4px rgba(0,0,0,.06)">✏️</th>
-            </tr>
-          </thead>
-          <tbody id="sorTbody"></tbody>
-        </table>
-      </div>
-    </div>
-    <div id="sorFooter" style="margin-top:.75rem;font-size:12px;color:var(--ink3)"></div>
-  </div>
-</div>
-
-<!-- Modal Soriana -->
-<div class="modal-overlay" id="sorModalOverlay" onclick="if(event.target===this)closeSorModal()">
-  <div class="modal" style="max-width:520px;width:calc(100vw - 32px);max-height:90vh;display:flex;flex-direction:column">
-    <div class="modal-h">
-      <div>
-        <div class="modal-title" id="sorModalTitle">Factura Soriana</div>
-        <div id="sorModalSub" style="font-size:11px;color:var(--ink3);margin-top:2px"></div>
-      </div>
-      <button class="modal-close" onclick="closeSorModal()">✕</button>
-    </div>
-    <div class="modal-body" id="sorModalBody" style="overflow-y:auto;flex:1"></div>
-    <div class="modal-footer" id="sorModalFooter"></div>
-  </div>
-</div>
-
-<!-- ═══ SUCURSALES ═══ -->
-<div id="sec-sucursales" class="sec">
-  <div class="topbar">
-    <div>
-      <div class="topbar-title">Historial por sucursal</div>
-      <div class="topbar-sub" id="sucSubtitle">121 sucursales Soriana · Swatter</div>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <div style="display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:4px 10px">
-        <span style="font-size:13px;color:var(--ink3)">🔍</span>
-        <input type="text" id="sucBusqueda" placeholder="Buscar sucursal..." oninput="renderSucursales()" style="border:none;background:none;font-size:13px;width:160px;outline:none;color:var(--ink)">
-        <button onclick="document.getElementById('sucBusqueda').value='';renderSucursales()" style="border:none;background:none;cursor:pointer;color:var(--ink3);font-size:13px;padding:0">✕</button>
-      </div>
-      <select class="tb-select" id="sucFmtFilter" onchange="renderSucursales()">
-        <option value="">Todos los formatos</option>
-        <option value="SH">SH · Híper</option>
-        <option value="SM">SM · Mercado</option>
-        <option value="SS">SS · Súper</option>
-        <option value="SE">SE · Express</option>
-        <option value="City Club">City Club</option>
-        <option value="Mall">Mall</option>
-      </select>
-      <select class="tb-select" id="sucEstadoFilter" onchange="renderSucursales()">
-        <option value="">Todos los estados</option>
-      </select>
-    </div>
-  </div>
-  <div class="page">
-    <div id="sucKpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1rem"></div>
-    <div id="sucGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px"></div>
-  </div>
-</div>
-
-<!-- Modal detalle sucursal -->
-<div class="modal-overlay" id="sucModalOverlay" onclick="if(event.target===this)closeSucModal()">
-  <div class="modal" style="max-width:600px;width:100%;max-height:90vh;overflow-y:auto">
-    <div class="modal-h">
-      <div>
-        <div class="modal-title" id="sucModalTitle"></div>
-        <div id="sucModalSub" style="font-size:11px;color:var(--ink3);margin-top:2px"></div>
-      </div>
-      <button class="modal-close" onclick="closeSucModal()">✕</button>
-    </div>
-    <div class="modal-body" id="sucModalBody" style="max-height:70vh;overflow-y:auto"></div>
-    <div class="modal-footer" id="sucModalFooter"></div>
-  </div>
-</div>
-
-<!-- Modal Importar Soriana -->
-<div class="modal-overlay" id="sorImportOverlay" onclick="if(event.target===this)closeSorImport()">
-  <div class="modal" style="max-width:600px;width:100%;max-height:90vh;overflow-y:auto">
-    <div class="modal-h">
-      <div>
-        <div class="modal-title">📥 Importar facturas</div>
-        <div id="sorImportSub" style="font-size:11px;color:var(--ink3);margin-top:2px"></div>
-      </div>
-      <button class="modal-close" onclick="closeSorImport()">✕</button>
-    </div>
-    <div class="modal-body" id="sorImportBody"></div>
-    <div class="modal-footer" id="sorImportFooter"></div>
-  </div>
-</div>
-
 <!-- ═══ CALENDARIO ═══ -->
 <div id="sec-calendario" class="sec">
   <div class="topbar">
@@ -907,7 +742,7 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
         <option value="">Todo el equipo</option>
         <option value="diana">Diana</option>
         <option value="aldo">Aldo</option>
-        <option value="karina">Karina</option>
+        <option value="karina">Marco</option>
         <option value="nallely">Nallely</option>
       </select>
     </div>
@@ -1008,6 +843,16 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
           <option value="">Con y sin gestión</option>
           <option value="con">Solo con gestión</option>
           <option value="sin">Solo sin gestión</option>
+        </select>
+        <select class="tb-select" id="carteraCategoriaFilter" onchange="renderCartera()">
+          <option value="">Todas las categorías</option>
+          <option value="gestion_sin_fecha">🟡 Gestionando (sin fecha)</option>
+          <option value="gestion_con_fecha">🔵 Con gestión y fecha</option>
+          <option value="inlocalizable">⚫ Inlocalizable</option>
+          <option value="demanda">⚖️ Proceso de demanda</option>
+          <option value="visita">🚗 Visita de cobranza</option>
+          <option value="plan_pagos">🗓️ Plan de pagos</option>
+          <option value="sinclasificar">— Sin clasificar</option>
         </select>
         <div style="display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:4px 10px">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -1413,10 +1258,18 @@ function doGet(e) {
 const PERSONAS = {
   diana:   {nombre:'Diana Rodríguez', inits:'DR', color:'#2563EB', rol:'Coordinadora de Cobranza'},
   aldo:    {nombre:'Aldo Luna',       inits:'AL', color:'#5F7857', rol:'Gestor de Cobranza'},
-  karina:  {nombre:'Karina Llanes',   inits:'KL', color:'#7C3AED', rol:'Gestora de Cobranza'},
+  karina:  {nombre:'Marco Alejandro Díaz', inits:'MD', color:'#7C3AED', rol:'Gestor de Cobranza'},
   nallely: {nombre:'Nallely Gallegos',inits:'NG', color:'#0F766E', rol:'Gerente de Adm. y Cobranza'}
 };
 const META_DIA=5, META_SEM=25;
+const CATEGORIAS_CARTERA = {
+  gestion_sin_fecha: {label:'Gestionando (sin fecha compromiso)', emoji:'🟡', color:'#92400E', bg:'#FFFBEB'},
+  gestion_con_fecha: {label:'Con gestión y fecha compromiso',     emoji:'🔵', color:'#1E40AF', bg:'#DBEAFE'},
+  inlocalizable:     {label:'Cliente inlocalizable',              emoji:'⚫', color:'#374151', bg:'#F3F4F6'},
+  demanda:           {label:'Proceso de demanda',                 emoji:'⚖️', color:'#7C2D12', bg:'#FFEDD5'},
+  visita:            {label:'Gestionar visita de cobranza',       emoji:'🚗', color:'#5B21B6', bg:'#EDE9FE'},
+  plan_pagos:        {label:'Cliente con plan de pagos',          emoji:'🗓️', color:'#065F46', bg:'#D1FAE5'},
+};
 
 // -- STATE --
 let personaActual = localStorage.getItem('avx_persona_actual') || null;
@@ -3546,18 +3399,67 @@ function renderCalendario(){
   const monCob=cobradas.reduce((s,p)=>s+(p.montoReal||p.monto),0);
   const monPend=pendientes.reduce((s,p)=>s+p.monto,0);
   document.getElementById('calResumen').innerHTML=[
-    {l:'Promesas este mes',v:promsDelMes.length,c:'#374151',bg:'#F3F4F6'},
-    {l:'Cobradas',v:cobradas.length+' · '+fmt(monCob),c:'#166534',bg:'#DCFCE7'},
-    {l:'Pendientes/vencidas',v:pendientes.length+' · '+fmt(monPend),c:'#991B1B',bg:'#FEE2E2'},
-  ].map(c=>`<div style="background:${c.bg};border-radius:8px;padding:.6rem 1rem;flex:1;min-width:160px">
+    {l:'Promesas este mes',v:promsDelMes.length,c:'#374151',bg:'#F3F4F6',click:''},
+    {l:'Cobradas',v:cobradas.length+' · '+fmt(monCob),c:'#166534',bg:'#DCFCE7',click:`onclick="abrirResumenMes('cobrado')" style="cursor:pointer" title="Ver desglose exacto"`},
+    {l:'Pendientes/vencidas',v:pendientes.length+' · '+fmt(monPend),c:'#991B1B',bg:'#FEE2E2',click:`onclick="abrirResumenMes('pendiente')" style="cursor:pointer" title="Ver desglose exacto"`},
+  ].map(c=>`<div ${c.click} style="background:${c.bg};border-radius:8px;padding:.6rem 1rem;flex:1;min-width:160px">
     <div style="font-size:11px;color:var(--ink3);font-weight:600;margin-bottom:2px">${c.l}</div>
     <div style="font-size:15px;font-weight:700;color:${c.c}">${c.v}</div>
   </div>`).join('');
 
   document.getElementById('calSubtitle').textContent=`${promsDelMes.length} promesa${promsDelMes.length!==1?'s':''} en ${label}`;
 
-  // Guardar índice por fecha para el modal de desglose
+  // Guardar índice por fecha y lista plana del mes para los modales de desglose
   window._calByDate = byDate;
+  window._calPromsDelMes = promsDelMes;
+  window._calMesLabel = label.charAt(0).toUpperCase()+label.slice(1);
+}
+
+// Desglose exacto de "Cobradas" o "Pendientes/vencidas" del mes visible en el calendario,
+// reutiliza el mismo modal que el desglose por día.
+function abrirResumenMes(tipo){
+  const promsDelMes = window._calPromsDelMes || [];
+  const items = tipo==='cobrado'
+    ? promsDelMes.filter(p=>p.estado==='cobrado')
+    : promsDelMes.filter(p=>p.estado==='pendiente'||p.estado==='vencido');
+
+  const tituloBase = tipo==='cobrado' ? 'Cobradas' : 'Pendientes/vencidas';
+  document.getElementById('calDiaTitle').textContent = `${tituloBase} · ${window._calMesLabel||''}`;
+
+  const monTotal = items.reduce((s,p)=>s+p.monto,0);
+  const monReal = items.reduce((s,p)=>s+(p.montoReal||p.monto),0);
+  document.getElementById('calDiaSub').textContent = tipo==='cobrado'
+    ? `${items.length} cuenta${items.length!==1?'s':''} · ${fmt(monReal)} cobrado`
+    : `${items.length} cuenta${items.length!==1?'s':''} · ${fmt(monTotal)} comprometido`;
+
+  const estadoMeta = {
+    cobrado:{bg:'#DCFCE7',tx:'#166534',label:'✅ Cobrada'},
+    incumplido:{bg:'#F3E8FF',tx:'#6B21A8',label:'⚠️ Incumplida'},
+    vencido:{bg:'#FEE2E2',tx:'#991B1B',label:'🔴 Vencida'},
+    pendiente:{bg:'#DBEAFE',tx:'#1E40AF',label:'🔵 Pendiente'},
+  };
+
+  const ordenados = [...items].sort((a,b)=> tipo==='cobrado' ? new Date(b.fecha)-new Date(a.fecha) : (a.fecha<b.fecha?-1:1));
+  document.getElementById('calDiaBody').innerHTML = ordenados.length===0
+    ? `<div style="text-align:center;padding:2rem;color:var(--ink4);font-size:13px">Sin elementos en esta categoría</div>`
+    : ordenados.map(p=>{
+        const em = estadoMeta[p.estado] || estadoMeta.pendiente;
+        const av = (PERSONAS[p.persona]||{inits:'?',color:'#999',nombre:p.persona});
+        const onClick = `openModal('${p.id}')`;
+        return `<div onclick="${onClick}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer;background:white" onmouseover="this.style.borderColor='var(--ink3)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="width:26px;height:26px;border-radius:50%;background:${av.color};color:white;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${av.inits.slice(0,2)}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.cliente}</div>
+            <div style="font-size:11px;color:var(--ink3)">${av.nombre} · ${fmtDate(p.fecha)}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:13px;font-weight:700;color:var(--ink)">${fmt(p.montoReal||p.monto)}</div>
+            <span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;background:${em.bg};color:${em.tx}">${em.label}</span>
+          </div>
+        </div>`;
+      }).join('');
+
+  document.getElementById('calDiaOverlay').classList.add('open');
 }
 
 function abrirDiaCalendario(dateStr){
@@ -3784,7 +3686,7 @@ function renderCartera(){
   document.getElementById('carteraSubtitle').innerHTML = `${carteraData.length} clientes · actualizado ${fechaLabel}${syncBadge}`;
   // Enriquecer con flag de gestión: cuenta como gestionado si tiene promesa activa O si el gestor ya capturó gestión propia en cartera
   const enriched = carteraData.map(c=>{
-    const tieneGestionPropia = !!(c.gestion && (c.gestion.fechaCompromiso || c.gestion.notas || c.gestion.contacto || c.gestion.gestor));
+    const tieneGestionPropia = !!(c.gestion && (c.gestion.fechaCompromiso || c.gestion.notas || c.gestion.contacto || c.gestion.gestor || c.gestion.categoria));
     const tienePromesa = clienteTienePromesaActiva(c.cliente);
     return {...c, tieneGestion: tieneGestionPropia || tienePromesa, tieneGestionPropia, tienePromesa};
   });
@@ -3850,6 +3752,7 @@ function renderCartera(){
   // Filtros
   const bucketF = document.getElementById('carteraBucketFilter').value;
   const gestionF = document.getElementById('carteraGestionFilter').value;
+  const categoriaF = document.getElementById('carteraCategoriaFilter').value;
   const busq = (document.getElementById('carteraBusqueda').value||'').trim().toUpperCase();
 
   const bucketKeyMap = {'1-30':'b1_30','31-60':'b31_60','61-90':'b61_90','mas90':'bMas90'};
@@ -3859,6 +3762,8 @@ function renderCartera(){
   if(bucketF) vis = vis.filter(c=>c[bucketKeyMap[bucketF]]>0);
   if(gestionF==='con') vis = vis.filter(c=>c.tieneGestion);
   if(gestionF==='sin') vis = vis.filter(c=>!c.tieneGestion);
+  if(categoriaF==='sinclasificar') vis = vis.filter(c=>!(c.gestion && c.gestion.categoria));
+  else if(categoriaF) vis = vis.filter(c=>c.gestion && c.gestion.categoria===categoriaF);
   if(busq) vis = vis.filter(c=>c.cliente.toUpperCase().includes(busq));
 
   vis.sort((a,b)=> carteraVista==='total' ? (b.total-a.total) : (b.totalVencido-a.totalVencido));
@@ -3866,13 +3771,16 @@ function renderCartera(){
   document.getElementById('carteraTbody').innerHTML = vis.length===0
     ? `<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--ink4);font-size:13px">Sin resultados con este filtro</td></tr>`
     : vis.map(c=>{
+      const cat = c.gestion && c.gestion.categoria ? CATEGORIAS_CARTERA[c.gestion.categoria] : null;
       const estadoBadge = c.totalVencido===0
         ? '<span style="font-size:10px;font-weight:700;color:#166534;background:#DCFCE7;padding:2px 8px;border-radius:4px">✅ Al corriente</span>'
-        : c.tieneGestionPropia
-          ? '<span style="font-size:10px;font-weight:700;color:#166534;background:#DCFCE7;padding:2px 8px;border-radius:4px">📝 Gestionado aquí</span>'
-          : c.tienePromesa
-            ? '<span style="font-size:10px;font-weight:700;color:#1E40AF;background:#DBEAFE;padding:2px 8px;border-radius:4px">🔵 Promesa en bandeja</span>'
-            : '<span style="font-size:10px;font-weight:700;color:#991B1B;background:#FEE2E2;padding:2px 8px;border-radius:4px">🔴 Sin gestión</span>';
+        : cat
+          ? `<span style="font-size:10px;font-weight:700;color:${cat.color};background:${cat.bg};padding:2px 8px;border-radius:4px">${cat.emoji} ${cat.label}</span>`
+          : c.tieneGestionPropia
+            ? '<span style="font-size:10px;font-weight:700;color:#166534;background:#DCFCE7;padding:2px 8px;border-radius:4px">📝 Gestionado aquí</span>'
+            : c.tienePromesa
+              ? '<span style="font-size:10px;font-weight:700;color:#1E40AF;background:#DBEAFE;padding:2px 8px;border-radius:4px">🔵 Promesa en bandeja</span>'
+              : '<span style="font-size:10px;font-weight:700;color:#991B1B;background:#FEE2E2;padding:2px 8px;border-radius:4px">🔴 Sin gestión</span>';
       const rowBg = c.totalVencido===0 ? 'white' : (c.tieneGestion?'white':'#FFF7F7');
       return `
       <tr onclick="abrirGestionCartera('${c.id}')" style="background:${rowBg};cursor:pointer" onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='${rowBg}'">
@@ -4037,6 +3945,11 @@ function abrirGestionCartera(clienteId){
     </div>
     ${renderHistoricoCliente(clienteId)}
     ${estadoPromesaHTML}
+    <div class="modal-field"><label>🏷️ Estado de la gestión</label>
+      <select id="cgCategoria">
+        <option value="">Sin clasificar</option>
+        ${Object.entries(CATEGORIAS_CARTERA).map(([k,v])=>`<option value="${k}"${g.categoria===k?' selected':''}>${v.emoji} ${v.label}</option>`).join('')}
+      </select></div>
     <div class="modal-field"><label>👤 Persona de contacto</label>
       <input type="text" id="cgContacto" value="${g.contacto||''}" placeholder="Nombre y/o teléfono del contacto en el cliente"></div>
     <div class="modal-field"><label>👥 Gestor asignado</label>
@@ -4070,6 +3983,7 @@ function guardarGestionCartera(clienteId){
   const c = carteraData[idx];
   const gPrev = c.gestion || {};
 
+  const categoria = document.getElementById('cgCategoria').value;
   const contacto = document.getElementById('cgContacto').value.trim();
   const gestor = document.getElementById('cgGestor').value;
   const fechaCompromiso = document.getElementById('cgFecha').value;
@@ -4110,7 +4024,7 @@ function guardarGestionCartera(clienteId){
   }
 
   carteraData[idx].gestion = {
-    contacto, gestor, fechaCompromiso, montoComprometido, notas,
+    categoria, contacto, gestor, fechaCompromiso, montoComprometido, notas,
     promesaId,
     updatedAt: new Date().toISOString(),
   };
@@ -4235,7 +4149,7 @@ function delProg(id){progsTemp=progsTemp.filter(p=>p.id!==id);renderProgsTemp();
 let isRegistrando = false;
 function registrar(){
   if(isRegistrando) return; // evita duplicados por doble clic
-  if(!personaActual){ toast('Primero selecciona tu nombre arriba (Diana, Aldo, Karina o Nallely)','warn'); return; }
+  if(!personaActual){ toast('Primero selecciona tu nombre arriba (Diana, Aldo, Marco o Nallely)','warn'); return; }
   const ll=+document.getElementById('inLL').value||0;
   const mo=+document.getElementById('inMonto').value||0;
   const co=+document.getElementById('inCob').value||0;
@@ -4657,7 +4571,7 @@ function modalAction(accion){
         </select>
       </div>
       <div class="modal-field"><label>Corregir nota (opcional)</label>
-        <textarea id="mEditNota" placeholder="Ej: Cobrado por Karina, no Diana...">${currentNota}</textarea>
+        <textarea id="mEditNota" placeholder="Ej: Cobrado por Marco, no Diana...">${currentNota}</textarea>
       </div>`;
     document.getElementById('modalFooter').innerHTML=`
       <button class="btn btn-ghost btn-sm" onclick="renderModalChoose(promesas.find(x=>x.id==modalPromId))">← Cancelar</button>
@@ -4673,7 +4587,7 @@ function modalAction(accion){
         </select>
       </div>
       <div class="modal-field"><label>Motivo (opcional)</label>
-        <textarea id="mReasignarNota" placeholder="Ej: Karina de vacaciones, pasa a Diana"></textarea>
+        <textarea id="mReasignarNota" placeholder="Ej: Marco de vacaciones, pasa a Diana"></textarea>
       </div>`;
     document.getElementById('modalFooter').innerHTML=`
       <button class="btn btn-ghost btn-sm" onclick="renderModalChoose(promesas.find(x=>x.id==modalPromId))">← Cancelar</button>
