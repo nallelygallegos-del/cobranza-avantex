@@ -2166,9 +2166,26 @@ async function syncCarteraFromSheets(silent){
     const data = JSON.parse((await res.text()).trim().replace(/^\uFEFF/,''));
 
     if(data.cartera && data.cartera.length){
-      // Merge: Sheets es fuente de verdad para montos, pero conserva gestión local más nueva
+      // Merge: Sheets es fuente de verdad para montos, pero conserva gestión local más nueva.
+      // Si dos filas de Sheets comparten id (dato viejo de antes de que combináramos
+      // duplicados al importar), se SUMAN en vez de que la última pise a la primera —
+      // así nunca se pierde dinero por una colisión de id.
       const sheetMap = {};
-      data.cartera.forEach(c=>{ sheetMap[c.id]=c; });
+      data.cartera.forEach(c=>{
+        if(sheetMap[c.id]){
+          const acc = sheetMap[c.id];
+          acc.vigente = (acc.vigente||0) + (c.vigente||0);
+          acc.b1_30 = (acc.b1_30||0) + (c.b1_30||0);
+          acc.b31_60 = (acc.b31_60||0) + (c.b31_60||0);
+          acc.b61_90 = (acc.b61_90||0) + (c.b61_90||0);
+          acc.bMas90 = (acc.bMas90||0) + (c.bMas90||0);
+          acc.totalVencido = (acc.totalVencido||0) + (c.totalVencido||0);
+          acc.total = (acc.total||0) + (c.total||0);
+          if(!acc.gestion && c.gestion) acc.gestion = c.gestion;
+        } else {
+          sheetMap[c.id] = c;
+        }
+      });
       carteraData.forEach(local=>{
         if(sheetMap[local.id] && local.gestion){
           const localUpdated = local.gestion.updatedAt || '';
@@ -2558,22 +2575,50 @@ function importarCartera(input){
 
     if(datos.length===0){ toast('No se encontraron clientes válidos en el archivo','warn'); return; }
 
+    // Un mismo cliente puede aparecer en más de una fila del reporte (mayúsculas distintas,
+    // o dos renglones para el mismo nombre). El id interno se arma normalizando el nombre,
+    // así que esas filas caen en el mismo id -- si no se combinan aquí, se pierden en
+    // silencio más adelante al sincronizar con Sheets (que sí usa el id como llave única).
+    // La combinación correcta es SUMAR los montos, nunca quedarnos con una sola fila y
+    // tirar la otra: ambas representan deuda real del mismo cliente.
+    const porId = {};
+    let filasCombinadas = 0;
+    datos.forEach(d=>{
+      if(porId[d.id]){
+        filasCombinadas++;
+        const acc = porId[d.id];
+        acc.vigente += d.vigente;
+        acc.b1_30 += d.b1_30;
+        acc.b31_60 += d.b31_60;
+        acc.b61_90 += d.b61_90;
+        acc.bMas90 += d.bMas90;
+        acc.totalVencido += d.totalVencido;
+        acc.total += d.total;
+      } else {
+        porId[d.id] = d;
+      }
+    });
+    const datosUnicos = Object.values(porId);
+    if(filasCombinadas>0){
+      toast(`ℹ️ ${filasCombinadas} fila(s) del reporte eran del mismo cliente (nombre repetido) — se sumaron en un solo registro para no perder montos`,'warn');
+    }
+
     // Preservar gestión capturada previamente (notas, contacto, fecha compromiso) por id de cliente
     const gestionPrevia = {};
     (carteraData||[]).forEach(c=>{
       if(c.gestion) gestionPrevia[c.id] = c.gestion;
     });
-    datos.forEach(d=>{
+    datosUnicos.forEach(d=>{
       if(gestionPrevia[d.id]) d.gestion = gestionPrevia[d.id];
     });
 
-    carteraData = datos;
+    carteraData = datosUnicos;
     carteraUpdatedAt = new Date().toISOString();
     safeSetItem('avx_cartera', JSON.stringify(carteraData));
     safeSetItem('avx_cartera_updated', carteraUpdatedAt);
-    guardarSnapshotHistorico(datos, carteraUpdatedAt);
+    guardarSnapshotHistorico(datosUnicos, carteraUpdatedAt);
     setCarteraSyncLock(3*60*1000); // protege estos datos recién subidos del auto-pull mientras se sincronizan
-    toast(`✓ Cartera cargada · ${datos.length} clientes`);
+    toast(`✓ Cartera cargada · ${datosUnicos.length} clientes`);
     renderCartera();
     renderFocos();
     // Respaldo automático a Sheets en cada carga de reporte
