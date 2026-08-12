@@ -2880,6 +2880,9 @@ async function syncCarteraToSheets(silent){
   if(!url){ if(!silent) toast('Primero conecta Google Sheets en Configuración','warn'); return; }
   if(!carteraData || carteraData.length===0){ if(!silent) toast('No hay datos de cartera para guardar','warn'); return; }
   if(!silent) showSyncBanner('Guardando Cartera en Sheets...','loading');
+  // Bloquea el auto-pull mientras esto está en vuelo, para que el jalón automático
+  // de cada 60s no agarre a Sheets a medio escribir y borre lo que acabas de subir.
+  carteraSyncLockUntil = Date.now() + 3*60*1000;
   try {
     await fetch(url, {
       method:'POST', mode:'no-cors',
@@ -2895,14 +2898,24 @@ async function syncCarteraToSheets(silent){
     // 'no-cors' nunca reporta si el POST realmente falló del lado de Apps Script
     // (permisos vencidos, cuota, error de script, etc.) -- por eso verificamos
     // leyendo de vuelta lo que quedó guardado antes de decir que "ya sincronizó".
-    const verificado = await verificarSyncCartera();
+    // Apps Script puede tardar unos segundos en terminar de escribir un archivo grande,
+    // así que reintentamos la verificación un par de veces con espera antes de rendirnos.
+    let verificado = await verificarSyncCartera();
+    for(let intento=0; intento<3 && !verificado.ok; intento++){
+      await new Promise(r=>setTimeout(r, 4000));
+      verificado = await verificarSyncCartera();
+    }
     if(verificado.ok){
       carteraSyncStatus = 'ok';
       carteraSyncVerifiedAt = new Date().toISOString();
       safeSetItem('avx_cartera_sync_verified', carteraSyncVerifiedAt);
+      carteraSyncLockUntil = 0; // ya confirmado, el auto-pull puede seguir con normalidad
       if(!silent) showSyncBanner('✓ Cartera y su histórico guardados en Sheets · '+carteraData.length+' clientes','ok');
     } else {
       carteraSyncStatus = 'error';
+      // Si después de reintentar sigue sin cuadrar, dejamos el auto-pull bloqueado más
+      // tiempo para que no ande jalando (y sobreescribiendo) datos incompletos solo.
+      carteraSyncLockUntil = Date.now() + 30*60*1000;
       // Este aviso se muestra SIEMPRE (aunque sea sync silenciosa) porque significa
       // que el equipo se va a quedar viendo números viejos si no se corrige.
       showSyncBanner('⚠️ La cartera no se guardó correctamente en Sheets (Sheets tiene '+verificado.remoteCount+' de '+carteraData.length+' clientes). Tu equipo no verá estos cambios todavía. Intenta de nuevo.','error');
@@ -2910,6 +2923,7 @@ async function syncCarteraToSheets(silent){
     renderCartera();
   } catch(e){
     carteraSyncStatus = 'error';
+    carteraSyncLockUntil = Date.now() + 30*60*1000;
     if(!silent) showSyncBanner('Error al guardar en Sheets: '+e.message,'error');
   }
 }
@@ -3575,6 +3589,10 @@ function cambiarVistaCartera(vista){
 let carteraUpdatedAt = localStorage.getItem('avx_cartera_updated')||'';
 let carteraSyncVerifiedAt = localStorage.getItem('avx_cartera_sync_verified')||'';
 let carteraSyncStatus = 'unknown'; // 'unknown' | 'ok' | 'error'
+// Mientras esto sea mayor a Date.now(), el auto-sync cada 60s NO jala Cartera desde Sheets.
+// Evita que un pull automático agarre datos a medio subir (Apps Script tarda unos segundos
+// en procesar archivos grandes) y sobreescriba silenciosamente lo que acabas de cargar.
+let carteraSyncLockUntil = 0;
 let carteraHistorico = JSON.parse(localStorage.getItem('avx_cartera_historico')||'{}'); // { clienteId: [{fecha, totalVencido, b1_30, b31_60, b61_90, bMas90, vigente}] }
 let carteraNombrePorId = JSON.parse(localStorage.getItem('avx_cartera_nombres')||'{}'); // { clienteId: nombreCliente } — para cruzar historial con promesas por nombre
 (function initCarteraNombres(){
@@ -3711,6 +3729,7 @@ function importarCartera(input){
     safeSetItem('avx_cartera', JSON.stringify(carteraData));
     safeSetItem('avx_cartera_updated', carteraUpdatedAt);
     guardarSnapshotHistorico(datos, carteraUpdatedAt);
+    carteraSyncLockUntil = Date.now() + 3*60*1000; // protege estos datos recién subidos del auto-pull mientras se sincronizan
     toast(`✓ Cartera cargada · ${datos.length} clientes`);
     renderCartera();
     renderFocos();
@@ -5325,7 +5344,7 @@ function renderSyncBadge(){
 // Refresca el badge de "hace X min" cada 30s, y vuelve a jalar datos de Sheets cada 60s
 setInterval(renderSyncBadge, 30000);
 setInterval(()=>{ if(localStorage.getItem('avx_sheets_url')) syncFromSheets(true); }, 60000);
-setInterval(()=>{ if(localStorage.getItem('avx_sheets_url')) syncCarteraFromSheets(true); }, 60000);
+setInterval(()=>{ if(localStorage.getItem('avx_sheets_url') && Date.now()>carteraSyncLockUntil) syncCarteraFromSheets(true); }, 60000);
 setInterval(()=>{ if(localStorage.getItem('avx_sheets_url')) syncSorianaFromSheets(true); }, 60000);
 function guardarURL(){
   const url=document.getElementById('sheetsURL').value.trim();
