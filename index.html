@@ -407,7 +407,8 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
 
 @media(max-width:1100px){.dash-grid{grid-template-columns:1fr}.dash-grid-3{grid-template-columns:1fr}.dash-grid-32{grid-template-columns:1fr}.meta-hero{grid-template-columns:1fr}.big-kpi-row{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:900px){.sidebar{transform:translateX(-100%)}.main{margin-left:0}.sync-banner{margin-left:0}.bandeja-cols{grid-template-columns:repeat(2,1fr)}.team-grid{grid-template-columns:1fr 1fr}.act-strip{grid-template-columns:1fr 1fr}}
-@media(max-width:600px){.form-grid{grid-template-columns:1fr}.fc.full{grid-column:span 1}.bandeja-cols{grid-template-columns:1fr}.team-grid{grid-template-columns:1fr}.add-row{grid-template-columns:1fr 1fr;row-gap:8px}.add-row .btn{grid-column:span 2}.summary-strip{grid-template-columns:repeat(2,1fr)}.act-strip{grid-template-columns:1fr 1fr}.big-kpi-row{grid-template-columns:1fr 1fr}.mh-kpi-row{grid-template-columns:1fr 1fr}.mh-cobrado{font-size:32px}}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr}.fc.full{grid-column:span 1}.bandeja-cols{grid-template-columns:1fr}.team-grid{grid-template-columns:1fr}.add-row{grid-template-columns:1fr 1fr;row-gap:8px}.add-row .btn{grid-column:span 2}.summary-strip{grid-template-columns:repeat(2,1fr)}.act-strip{grid-template-columns:1fr 1fr}.big-kpi-row{grid-template-columns:1fr 1fr}.mh-kpi-row{grid-template-columns:1fr 1fr}.mh-cobrado{font-size:32px}#banKpi{grid-template-columns:1fr 1fr!important}}
+@media(max-width:420px){#banKpi{grid-template-columns:1fr!important}}
 </style>
 </head>
 
@@ -450,6 +451,10 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
       <span class="sb-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H3a1 1 0 0 0-1 1v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a1 1 0 0 0-1-1Z"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="2" y1="12" x2="22" y2="12"/></svg></span>
       Cartera vencida
       <span id="carteraDot" style="display:none;width:7px;height:7px;border-radius:50%;background:#DC2626;margin-left:auto"></span>
+    </button>
+    <button class="sb-item" onclick="showSec('rendimiento',this)">
+      <span class="sb-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></span>
+      Rendimiento
     </button>
     <button class="sb-item" onclick="showSec('focos',this)">
       <span class="sb-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
@@ -562,7 +567,11 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
       <div class="topbar-sub">Todas las promesas del equipo · haz clic para actualizar</div>
     </div>
     <div class="topbar-actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <div id="banMetaBar" style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink3)"></div>
+      <div style="display:flex;align-items:center;gap:4px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:4px 6px">
+        <button onclick="cambiarMesBandeja(-1)" style="background:none;border:none;cursor:pointer;color:var(--ink3);font-size:13px;line-height:1;padding:2px 4px" title="Mes anterior">◀</button>
+        <span id="banMesLabel" style="font-size:12px;font-weight:700;color:var(--ink);min-width:110px;text-align:center;white-space:nowrap"></span>
+        <button onclick="cambiarMesBandeja(1)" style="background:none;border:none;cursor:pointer;color:var(--ink3);font-size:13px;line-height:1;padding:2px 4px" title="Mes siguiente">▶</button>
+      </div>
       <div style="display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:4px 10px">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
         <input type="text" id="banBusqueda" placeholder="Buscar cliente..." oninput="renderBandeja()" style="border:none;background:none;font-size:13px;width:150px;outline:none;color:var(--ink)">
@@ -578,13 +587,13 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
   <div class="page">
   <div class="kpi-row" id="banKpi" style="grid-template-columns:repeat(4,1fr)"></div>
 
-  <!-- PRIORIDAD DE COBRANZA — detalle top 10 -->
+  <!-- META SEMANAL — desglose claro de cobrado vs. programado vs. pendiente de confirmar -->
   <div class="panel" style="margin-bottom:1.25rem">
-    <div class="panel-h" style="cursor:pointer" onclick="togglePrioridadDetalle()">
-      <span class="panel-t">🎯 A quién atacar hoy — top 10 por prioridad</span>
-      <span id="banPrioridadToggle" style="font-size:11px;color:var(--ink3)">▼ ocultar</span>
+    <div class="panel-h">
+      <span class="panel-t">📊 Meta semanal de cobranza</span>
+      <span id="banMetaSemRango" style="font-size:11px;color:var(--ink3)"></span>
     </div>
-    <div class="panel-body" id="banTopPrioridadWrap"><div id="banTopPrioridad"></div></div>
+    <div class="panel-body" id="banMetaSemanal"></div>
   </div>
 
   <div class="bandeja-cols" id="bandejaGrid"></div>
@@ -882,6 +891,51 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
       </div>
       <div id="carteraFooter" style="margin-top:.75rem;font-size:12px;color:var(--ink3)"></div>
     </div>
+  </div>
+</div>
+
+<!-- ═══ RENDIMIENTO POR SEGMENTO ═══ -->
+<div id="sec-rendimiento" class="sec">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">📊 Rendimiento por segmento</div>
+      <div class="topbar-sub">Por cobrar vs. comprometido vs. pagado vs. sin gestión — comparativo semanal por ejecutivo</div>
+    </div>
+    <div class="topbar-actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:4px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:4px 6px">
+        <button onclick="cambiarMesRendimiento(-1)" style="background:none;border:none;cursor:pointer;color:var(--ink3);font-size:13px;line-height:1;padding:2px 4px" title="Mes anterior">◀</button>
+        <span id="rendMesLabel" style="font-size:12px;font-weight:700;color:var(--ink);min-width:110px;text-align:center;white-space:nowrap"></span>
+        <button onclick="cambiarMesRendimiento(1)" style="background:none;border:none;cursor:pointer;color:var(--ink3);font-size:13px;line-height:1;padding:2px 4px" title="Mes siguiente">▶</button>
+      </div>
+    </div>
+  </div>
+  <div class="page">
+
+    <!-- ASIGNACIÓN DE SEGMENTOS DEL MES -->
+    <div class="panel" style="margin-bottom:1.25rem">
+      <div class="panel-h">
+        <span class="panel-t">👥 Asignación de segmentos — <span id="rendAsignacionMesLabel"></span></span>
+        <button class="btn btn-ghost btn-sm" id="rendAsignacionEditBtn" onclick="toggleEdicionAsignacion()">✏️ Editar</button>
+      </div>
+      <div class="panel-body" id="rendAsignacionBody"></div>
+    </div>
+
+    <!-- SELECTOR DE SEMANA -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:.85rem;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:4px;background:var(--surf);border:1px solid var(--border);border-radius:8px;padding:4px 6px">
+        <button onclick="cambiarSemanaRendimiento(-1)" style="background:none;border:none;cursor:pointer;color:var(--ink3);font-size:13px;line-height:1;padding:2px 6px" title="Semana anterior">◀</button>
+        <span id="rendSemanaLabel" style="font-size:13px;font-weight:700;color:var(--ink);min-width:170px;text-align:center;white-space:nowrap"></span>
+        <button onclick="cambiarSemanaRendimiento(1)" style="background:none;border:none;cursor:pointer;color:var(--ink3);font-size:13px;line-height:1;padding:2px 6px" title="Semana siguiente">▶</button>
+      </div>
+      <span style="font-size:11px;color:var(--ink3)">Tarjetas de abajo = esta semana · tabla de abajo = todas las semanas del mes</span>
+    </div>
+
+    <!-- TARJETAS POR SEGMENTO (semana seleccionada) -->
+    <div id="rendSegmentCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:1.5rem"></div>
+
+    <!-- COMPARATIVAS SEMANALES POR SEGMENTO -->
+    <div id="rendComparativas"></div>
+
   </div>
 </div>
 
@@ -2059,6 +2113,7 @@ function showSec(id,btn){
   if(id==='calendario'){renderCalendario();}
   if(id==='cartera'){renderCartera();}
   if(id==='focos'){renderFocos();}
+  if(id==='rendimiento'){renderRendimiento();}
 }
 
 // ==========================================
@@ -3521,6 +3576,15 @@ let carteraUpdatedAt = localStorage.getItem('avx_cartera_updated')||'';
 let carteraSyncVerifiedAt = localStorage.getItem('avx_cartera_sync_verified')||'';
 let carteraSyncStatus = 'unknown'; // 'unknown' | 'ok' | 'error'
 let carteraHistorico = JSON.parse(localStorage.getItem('avx_cartera_historico')||'{}'); // { clienteId: [{fecha, totalVencido, b1_30, b31_60, b61_90, bMas90, vigente}] }
+let carteraNombrePorId = JSON.parse(localStorage.getItem('avx_cartera_nombres')||'{}'); // { clienteId: nombreCliente } — para cruzar historial con promesas por nombre
+(function initCarteraNombres(){
+  // Si ya hay cartera cargada pero el mapa de nombres está vacío (primera vez con esta función),
+  // lo poblamos desde los datos actuales para que Rendimiento funcione de inmediato.
+  if(Object.keys(carteraNombrePorId).length===0 && (carteraData||[]).length){
+    carteraData.forEach(c=>{ carteraNombrePorId[c.id]=c.cliente; });
+    safeSetItem('avx_cartera_nombres', JSON.stringify(carteraNombrePorId));
+  }
+})();
 
 function guardarSnapshotHistorico(datos, fechaISO){
   const fecha = fechaISO.split('T')[0]; // un snapshot por día, no por carga
@@ -3534,11 +3598,13 @@ function guardarSnapshotHistorico(datos, fechaISO){
     // Si ya hay un snapshot del mismo día, lo reemplaza (no duplica)
     const idx = arr.findIndex(s=>s.fecha===fecha);
     if(idx>=0) arr[idx] = snap; else arr.push(snap);
+    carteraNombrePorId[c.id] = c.cliente;
     // Mantener ordenado por fecha y limitar a 52 snapshots (~1 año si es semanal)
     arr.sort((a,b)=>a.fecha<b.fecha?-1:1);
     if(arr.length>52) arr.splice(0, arr.length-52);
   });
   safeSetItem('avx_cartera_historico', JSON.stringify(carteraHistorico));
+  safeSetItem('avx_cartera_nombres', JSON.stringify(carteraNombrePorId));
 }
 
 function parseMoneyStr(s){
@@ -3902,6 +3968,259 @@ function renderFocos(){
   document.getElementById('focosFooter').textContent = `${focos.length} clientes en foco rojo · clic en un cliente para gestionar`;
 }
 
+// ══════════════════════════════════════════════════════════════
+// RENDIMIENTO POR SEGMENTO — comparativo semanal por ejecutivo
+// ══════════════════════════════════════════════════════════════
+const SEGMENTOS_RENDIMIENTO = [
+  {key:'b31_60', label:'31 a 60 días', color:'#D97706', bg:'#FFFBEB'},
+  {key:'b61_90', label:'61 a 90 días', color:'#DC2626', bg:'#FEF2F2'},
+  {key:'bMas90', label:'+90 días',     color:'#7C3AED', bg:'#F3E8FF'}
+];
+
+let rendMesFiltro = today().slice(0,7); // 'YYYY-MM'
+let rendSemanaIdx = null; // se calcula al render si es null
+let rendEditandoAsignacion = false;
+let asignacionSegmentos = JSON.parse(localStorage.getItem('avx_asignacion_segmentos')||'{}');
+// forma: { '2026-08': { b31_60:'diana', b61_90:'aldo', bMas90:{owner:'karina', apoyoTodos:true} } }
+
+function getAsignacionMes(mes){
+  return asignacionSegmentos[mes] || {b31_60:'', b61_90:'', bMas90:{owner:'', apoyoTodos:true}};
+}
+
+function guardarAsignacionMes(mes, data){
+  asignacionSegmentos[mes] = data;
+  safeSetItem('avx_asignacion_segmentos', JSON.stringify(asignacionSegmentos));
+}
+
+function cambiarMesRendimiento(delta){
+  const [y,m] = rendMesFiltro.split('-').map(Number);
+  const d = new Date(y, (m-1)+delta, 1);
+  rendMesFiltro = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  rendSemanaIdx = null; // recalcular semana por default al cambiar de mes
+  rendEditandoAsignacion = false;
+  renderRendimiento();
+}
+
+function cambiarSemanaRendimiento(delta){
+  const semanas = semanasDelMes(rendMesFiltro);
+  rendSemanaIdx = Math.min(semanas.length-1, Math.max(0, (rendSemanaIdx??0)+delta));
+  renderRendimiento();
+}
+
+function toggleEdicionAsignacion(){
+  rendEditandoAsignacion = !rendEditandoAsignacion;
+  renderRendimiento();
+}
+
+function guardarEdicionAsignacion(){
+  const data = {
+    b31_60: document.getElementById('rendSel3160').value,
+    b61_90: document.getElementById('rendSel6190').value,
+    bMas90: {
+      owner: document.getElementById('rendSelMas90').value,
+      apoyoTodos: document.getElementById('rendApoyoTodos').checked
+    }
+  };
+  guardarAsignacionMes(rendMesFiltro, data);
+  rendEditandoAsignacion = false;
+  renderRendimiento();
+}
+
+// Lunes a viernes de cada semana que toca el mes indicado
+function semanasDelMes(mesStr){
+  const [y,m] = mesStr.split('-').map(Number);
+  const firstDay = new Date(y, m-1, 1);
+  const lastDay = new Date(y, m, 0);
+  const day = firstDay.getDay();
+  const diff = firstDay.getDate() - day + (day===0?-6:1);
+  let monday = new Date(y, m-1, diff);
+  const weeks = [];
+  let guard = 0;
+  while(monday <= lastDay && guard < 8){
+    const days = Array.from({length:5},(_,i)=>{ const d=new Date(monday); d.setDate(monday.getDate()+i); return toLocalISO(d); });
+    weeks.push(days);
+    monday = new Date(monday); monday.setDate(monday.getDate()+7);
+    guard++;
+  }
+  return weeks;
+}
+
+// Reconstruye el estado de la cartera "tal como estaba" el día indicado, usando
+// el histórico guardado en cada carga de "Cartera vencida" (uno por día de carga).
+function getCarteraSnapshotAsOf(fechaLimite){
+  const hoyKey = (carteraUpdatedAt||'').split('T')[0] || today();
+  const ids = new Set([...Object.keys(carteraHistorico), ...(carteraData||[]).map(c=>c.id)]);
+  const out = [];
+  ids.forEach(id=>{
+    const hist = carteraHistorico[id]||[];
+    const live = (carteraData||[]).find(c=>c.id===id);
+    let best = null;
+    hist.forEach(s=>{ if(s.fecha<=fechaLimite && (!best || s.fecha>best.fecha)) best = s; });
+    if(live && hoyKey<=fechaLimite && (!best || hoyKey>=best.fecha)){
+      best = {fecha:hoyKey, vigente:live.vigente, b1_30:live.b1_30, b31_60:live.b31_60, b61_90:live.b61_90, bMas90:live.bMas90, totalVencido:live.totalVencido, total:live.total};
+    }
+    if(best){
+      const nombre = carteraNombrePorId[id] || (live && live.cliente) || '';
+      out.push({id, cliente: nombre, ...best});
+    }
+  });
+  return out;
+}
+
+// A qué segmento pertenece "principalmente" un cliente (el rango con más saldo)
+function bucketDominante(c){
+  const vals = [['b31_60',c.b31_60||0],['b61_90',c.b61_90||0],['bMas90',c.bMas90||0]];
+  vals.sort((a,b)=>b[1]-a[1]);
+  return vals[0][1]>0 ? vals[0][0] : null;
+}
+
+function statsSegmentoSemana(segKey, semD){
+  const snapshot = getCarteraSnapshotAsOf(semD[4]); // viernes de esa semana
+  const porCobrar = snapshot.reduce((s,c)=>s+(c[segKey]||0),0);
+  const clientesSet = new Set(snapshot.filter(c=>bucketDominante(c)===segKey && c.cliente).map(c=>normalizarNombreCliente(c.cliente)));
+  const promsSemana = promesas.filter(p=>semD.includes(p.fecha) && clientesSet.has(normalizarNombreCliente(p.cliente||'')));
+  const compromiso = promsSemana.filter(p=>p.estado==='pendiente'||p.estado==='vencido').reduce((s,p)=>s+p.monto,0);
+  const pagado = promsSemana.filter(p=>p.estado==='cobrado').reduce((s,p)=>s+(p.montoReal||p.monto),0);
+  const sinGestion = Math.max(0, porCobrar - compromiso - pagado);
+  return {porCobrar, compromiso, pagado, sinGestion, nClientes: clientesSet.size};
+}
+
+function nombreGestorAsignado(seg, asign){
+  if(seg.key==='bMas90'){
+    const owner = asign.bMas90?.owner ? (PERSONAS[asign.bMas90.owner]?.nombre.split(' ')[0]||'') : '';
+    if(!owner) return 'Sin asignar';
+    return owner + (asign.bMas90.apoyoTodos ? ' (dueño) + apoyo de todo el equipo' : ' (dueño)');
+  }
+  const pid = asign[seg.key];
+  return pid ? (PERSONAS[pid]?.nombre.split(' ')[0]||pid) : 'Sin asignar';
+}
+
+function renderRendimientoAsignacion(){
+  const body = document.getElementById('rendAsignacionBody');
+  const mesLabelEl = document.getElementById('rendAsignacionMesLabel');
+  const editBtn = document.getElementById('rendAsignacionEditBtn');
+  if(!body) return;
+  const [y,m] = rendMesFiltro.split('-').map(Number);
+  const mesLabel = new Date(y,m-1,1).toLocaleDateString('es-MX',{month:'long',year:'numeric'});
+  if(mesLabelEl) mesLabelEl.textContent = mesLabel.charAt(0).toUpperCase()+mesLabel.slice(1);
+  const asign = getAsignacionMes(rendMesFiltro);
+  if(editBtn) editBtn.textContent = rendEditandoAsignacion ? '✕ Cancelar' : '✏️ Editar';
+
+  if(rendEditandoAsignacion){
+    const opciones = (sel)=>`<option value="">Sin asignar</option>`+Object.entries(PERSONAS).map(([k,v])=>`<option value="${k}"${sel===k?' selected':''}>${v.nombre}</option>`).join('');
+    body.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:1rem">
+        <div class="modal-field"><label>31 a 60 días</label><select id="rendSel3160">${opciones(asign.b31_60)}</select></div>
+        <div class="modal-field"><label>61 a 90 días</label><select id="rendSel6190">${opciones(asign.b61_90)}</select></div>
+        <div class="modal-field"><label>+90 días — dueño</label><select id="rendSelMas90">${opciones(asign.bMas90?.owner)}</select></div>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink2);margin-bottom:1rem">
+        <input type="checkbox" id="rendApoyoTodos" ${asign.bMas90?.apoyoTodos!==false?'checked':''}>
+        Todo el equipo apoya en +90 días
+      </label>
+      <button class="btn btn-primary btn-sm" onclick="guardarEdicionAsignacion()">💾 Guardar asignación de ${mesLabel}</button>`;
+    return;
+  }
+
+  body.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+    ${SEGMENTOS_RENDIMIENTO.map(seg=>`
+      <div style="background:${seg.bg};border-radius:8px;padding:.65rem .85rem">
+        <div style="font-size:10px;font-weight:700;color:${seg.color};text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px">${seg.label}</div>
+        <div style="font-size:13px;font-weight:700;color:var(--ink)">${nombreGestorAsignado(seg,asign)}</div>
+      </div>`).join('')}
+  </div>`;
+}
+
+function renderRendimientoCards(semD, asign){
+  const cont = document.getElementById('rendSegmentCards');
+  if(!cont) return;
+  cont.innerHTML = SEGMENTOS_RENDIMIENTO.map(seg=>{
+    const st = statsSegmentoSemana(seg.key, semD);
+    const pctGestionado = st.porCobrar>0 ? Math.round((st.porCobrar-st.sinGestion)/st.porCobrar*100) : 0;
+    return `<div class="panel" style="margin-bottom:0">
+      <div class="panel-h">
+        <span class="panel-t" style="color:${seg.color}">${seg.label}</span>
+        <span style="font-size:11px;color:var(--ink3)">${nombreGestorAsignado(seg,asign)}</span>
+      </div>
+      <div class="panel-body">
+        <div style="font-size:11px;color:var(--ink3);margin-bottom:2px">Por cobrar (${st.nClientes} cliente${st.nClientes!==1?'s':''})</div>
+        <div style="font-size:22px;font-weight:800;color:var(--ink);margin-bottom:.7rem">${fmt(st.porCobrar)}</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;justify-content:space-between;font-size:12.5px"><span style="color:var(--ink3)">🤝 Con compromiso de pago</span><span style="font-weight:700;color:#1E40AF">${fmt(st.compromiso)}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12.5px"><span style="color:var(--ink3)">✅ Pagado</span><span style="font-weight:700;color:#166534">${fmt(st.pagado)}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12.5px"><span style="color:var(--ink3)">🔴 Sin gestión</span><span style="font-weight:700;color:#991B1B">${fmt(st.sinGestion)}</span></div>
+        </div>
+        <div style="width:100%;height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:.7rem">
+          <div style="width:${pctGestionado}%;height:6px;background:${seg.color};border-radius:3px"></div>
+        </div>
+        <div style="font-size:10px;color:var(--ink4);margin-top:3px">${pctGestionado}% gestionado (con compromiso o ya pagado)</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderRendimientoComparativas(semanas, asign){
+  const cont = document.getElementById('rendComparativas');
+  if(!cont) return;
+  cont.innerHTML = SEGMENTOS_RENDIMIENTO.map(seg=>{
+    const filas = semanas.map((semD,i)=>{
+      const st = statsSegmentoSemana(seg.key, semD);
+      const activa = i===rendSemanaIdx;
+      return {i, semD, st, activa};
+    });
+    return `<div class="panel" style="margin-bottom:1.25rem">
+      <div class="panel-h">
+        <span class="panel-t" style="color:${seg.color}">${seg.label} — comparativo semanal</span>
+        <span style="font-size:11px;color:var(--ink3)">${nombreGestorAsignado(seg,asign)}</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="dt">
+          <thead><tr>
+            <th>Semana</th><th style="text-align:right">Por cobrar</th><th style="text-align:right">Compromiso</th>
+            <th style="text-align:right">Pagado</th><th style="text-align:right">Sin gestión</th><th style="text-align:right">% gestionado</th>
+          </tr></thead>
+          <tbody>
+            ${filas.map(f=>{
+              const pct = f.st.porCobrar>0 ? Math.round((f.st.porCobrar-f.st.sinGestion)/f.st.porCobrar*100) : 0;
+              return `<tr onclick="rendSemanaIdx=${f.i};renderRendimiento()" style="cursor:pointer;${f.activa?'background:'+seg.bg:''}">
+                <td style="font-weight:${f.activa?'800':'600'}">Semana ${f.i+1} <span style="font-weight:400;color:var(--ink4);font-size:11px">(${fmtDate(f.semD[0])} – ${fmtDate(f.semD[4])})</span></td>
+                <td style="text-align:right;font-family:var(--mono)">${fmt(f.st.porCobrar)}</td>
+                <td style="text-align:right;font-family:var(--mono);color:#1E40AF">${fmt(f.st.compromiso)}</td>
+                <td style="text-align:right;font-family:var(--mono);color:#166534">${fmt(f.st.pagado)}</td>
+                <td style="text-align:right;font-family:var(--mono);color:#991B1B">${fmt(f.st.sinGestion)}</td>
+                <td style="text-align:right;font-weight:700;color:${seg.color}">${pct}%</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderRendimiento(){
+  const [y,m] = rendMesFiltro.split('-').map(Number);
+  const label = new Date(y,m-1,1).toLocaleDateString('es-MX',{month:'long',year:'numeric'});
+  const mesLabelEl = document.getElementById('rendMesLabel');
+  if(mesLabelEl) mesLabelEl.textContent = label.charAt(0).toUpperCase()+label.slice(1);
+
+  const semanas = semanasDelMes(rendMesFiltro);
+  if(rendSemanaIdx===null || rendSemanaIdx>=semanas.length){
+    // Por default: la semana actual si el mes filtrado es el mes en curso; si no, la última semana del mes
+    const hoyStr = today();
+    const idxHoy = semanas.findIndex(s=>hoyStr>=s[0]&&hoyStr<=s[4]);
+    rendSemanaIdx = idxHoy>=0 ? idxHoy : semanas.length-1;
+  }
+  const semD = semanas[rendSemanaIdx];
+  const semLabelEl = document.getElementById('rendSemanaLabel');
+  if(semLabelEl) semLabelEl.textContent = `Semana ${rendSemanaIdx+1} · ${fmtDate(semD[0])} – ${fmtDate(semD[4])}`;
+
+  const asign = getAsignacionMes(rendMesFiltro);
+  renderRendimientoAsignacion();
+  renderRendimientoCards(semD, asign);
+  renderRendimientoComparativas(semanas, asign);
+}
+
 function abrirGestionCarteraDesdeFocos(clienteId){
   abrirGestionCartera(clienteId);
 }
@@ -4235,16 +4554,116 @@ function renderTopPrioridad(targetId, n, fp){
   }).join('');
 }
 
-function togglePrioridadDetalle(){
-  const wrap = document.getElementById('banTopPrioridadWrap');
-  const toggle = document.getElementById('banPrioridadToggle');
-  const isHidden = wrap.style.display==='none';
-  wrap.style.display = isHidden ? 'block' : 'none';
-  toggle.textContent = isHidden ? '▼ ocultar' : '▲ mostrar';
+// -- FILTRO DE MES EN BANDEJA --
+// Las columnas Pendientes / Vencen hoy / Vencidas se muestran siempre completas
+// (lo que no se ha cobrado importa sin importar el mes). Solo "Cerradas" y los
+// totales de cobrado se filtran por el mes seleccionado.
+let banMesFiltro = today().slice(0,7); // 'YYYY-MM'
+
+const fechaCierreProm = p => {
+  const hist = p.historial||[];
+  // Busca específicamente el evento de cobro/incumplimiento, no cualquier cambio
+  // posterior (reasignación, nota, etc.) — eso es lo que causaba que promesas
+  // cerradas hace meses aparecieran como "cerradas este mes" si tuvieron algún
+  // ajuste posterior con fecha de hoy.
+  const patron = p.estado==='cobrado' ? /cobrad/i : p.estado==='incumplido' ? /incumplid/i : null;
+  if(patron){
+    for(let i=hist.length-1;i>=0;i--){
+      const h = hist[i];
+      if(h.fecha && patron.test((h.accion||'')+' '+(h.nota||''))) return h.fecha;
+    }
+  }
+  // Respaldo: si no se encontró el evento específico, usar el último cambio con fecha
+  for(let i=hist.length-1;i>=0;i--){ if(hist[i].fecha) return hist[i].fecha; }
+  return p.fecha;
+};
+
+function cambiarMesBandeja(delta){
+  const [y,m] = banMesFiltro.split('-').map(Number);
+  const d = new Date(y, (m-1)+delta, 1);
+  banMesFiltro = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  renderBandeja();
+}
+
+function renderBanMesLabel(){
+  const el = document.getElementById('banMesLabel');
+  if(!el) return;
+  const [y,m] = banMesFiltro.split('-').map(Number);
+  const label = new Date(y,m-1,1).toLocaleDateString('es-MX',{month:'long',year:'numeric'});
+  el.textContent = label.charAt(0).toUpperCase()+label.slice(1);
+}
+
+function renderBanMetaSemanal(){
+  const wrap = document.getElementById('banMetaSemanal');
+  const rangoEl = document.getElementById('banMetaSemRango');
+  if(!wrap) return;
+
+  const semD = week(); // lunes a viernes de la semana actual
+  const hoyStr = today();
+
+  // 1) COBRADO EXITOSO DE LA SEMANA — dinero ya confirmado, cobrado y registrado.
+  //    Esto es lo ÚNICO que cuenta para el % de la meta.
+  const promsCobSem = promesas.filter(p=>p.estado==='cobrado' && semD.includes(fechaCierreProm(p)));
+  const cobProm = promsCobSem.reduce((s,p)=>s+(p.montoReal||p.monto),0);
+  const cobRegs = registros.filter(r=>semD.includes(r.fecha)).reduce((s,r)=>s+(Number(r.cobrado)||0),0);
+  const cobradoExitoso = cobProm + cobRegs;
+
+  // 2) PROGRAMADO DE LA SEMANA — todo lo que tiene fecha compromiso esta semana,
+  //    ya se haya cobrado, siga pendiente o esté vencido.
+  const promsSemana = promesas.filter(p=>semD.includes(p.fecha));
+  const programadoSemana = promsSemana.reduce((s,p)=>s+p.monto,0);
+
+  // 3) PENDIENTE DE CONFIRMAR — de lo programado esta semana, lo que el cliente
+  //    aún no paga (sigue pendiente o ya venció sin cobro).
+  const pendientesConfirmar = promsSemana.filter(p=>p.estado==='pendiente'||p.estado==='vencido');
+  const montoPendienteConfirmar = pendientesConfirmar.reduce((s,p)=>s+p.monto,0);
+
+  // 4) PROGRAMADO DEL MES TOTAL — todo lo comprometido con fecha dentro del mes en curso.
+  const mesActual = hoyStr.slice(0,7);
+  const promsMes = promesas.filter(p=>(p.fecha||'').slice(0,7)===mesActual);
+  const programadoMes = promsMes.reduce((s,p)=>s+p.monto,0);
+
+  const pct = Math.min(100, Math.round(cobradoExitoso/META_SEM_PESOS*100));
+  const pctColor = pct>=80?'#5F7857':pct>=50?'#D97706':'#DC2626';
+  const faltante = Math.max(0, META_SEM_PESOS-cobradoExitoso);
+
+  if(rangoEl) rangoEl.textContent = `${fmtDate(semD[0])} – ${fmtDate(semD[4])}`;
+
+  wrap.innerHTML = `
+    <div style="font-size:11px;color:var(--ink3);line-height:1.5;margin-bottom:.9rem">
+      El % de la meta solo cuenta lo <strong style="color:var(--ink2)">cobrado y confirmado</strong> de esta semana.
+      Lo que está programado pero el cliente aún no paga se muestra aparte, para que sepas qué falta por cerrar
+      sin confundirlo con dinero que ya entró.
+    </div>
+    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:.4rem">
+      <span style="font-size:26px;font-weight:800;color:${pctColor}">${fmt(cobradoExitoso)}</span>
+      <span style="font-size:12px;color:var(--ink3)">cobrado esta semana · <strong style="color:${pctColor}">${pct}%</strong> de la meta (${fmt(META_SEM_PESOS)})</span>
+    </div>
+    <div style="width:100%;height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:1.1rem">
+      <div style="width:${pct}%;height:8px;background:${pctColor};border-radius:4px;transition:width .4s"></div>
+    </div>
+    <div style="font-size:11px;color:var(--ink3);margin-bottom:.6rem">${pct>=100?'🎉 Meta semanal alcanzada':'Faltan '+fmt(faltante)+' para la meta'}</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
+      <div style="background:var(--bg);border-radius:8px;padding:.7rem .85rem">
+        <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">📅 Programado de la semana</div>
+        <div style="font-size:16px;font-weight:800;color:var(--ink)">${fmt(programadoSemana)}</div>
+        <div style="font-size:11px;color:var(--ink4)">${promsSemana.length} promesa${promsSemana.length!==1?'s':''} con fecha esta semana</div>
+      </div>
+      <div style="background:#FFFBEB;border-radius:8px;padding:.7rem .85rem">
+        <div style="font-size:10px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">⏳ Pendiente de confirmar</div>
+        <div style="font-size:16px;font-weight:800;color:#92400E">${fmt(montoPendienteConfirmar)}</div>
+        <div style="font-size:11px;color:var(--ink4)">${pendientesConfirmar.length} sin pago confirmado aún</div>
+      </div>
+      <div style="background:var(--bg);border-radius:8px;padding:.7rem .85rem">
+        <div style="font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">🗓️ Programado del mes total</div>
+        <div style="font-size:16px;font-weight:800;color:var(--ink)">${fmt(programadoMes)}</div>
+        <div style="font-size:11px;color:var(--ink4)">${promsMes.length} promesa${promsMes.length!==1?'s':''} con fecha este mes</div>
+      </div>
+    </div>`;
 }
 
 function renderBandeja(){
-  renderTopPrioridad('banTopPrioridad', 10, '');
+  renderBanMesLabel();
   const busq = (document.getElementById('banBusqueda')?.value||'').trim().toUpperCase();
   const lista = busq
     ? promesas.filter(p=>(p.cliente||'').toUpperCase().includes(busq) || (p.persona||'').toUpperCase().includes(busq))
@@ -4254,15 +4673,21 @@ function renderBandeja(){
   lista.forEach(p=>{
     const isHoy=p.fecha===today();
     const isVenc=p.fecha<today()&&p.estado==='pendiente';
-    if(p.estado==='cobrado'||p.estado==='incumplido') cols.cerrado.push(p);
+    if(p.estado==='cobrado'||p.estado==='incumplido'){
+      // Cerradas: se filtra por la fecha propia de la promesa (misma que usan
+      // Pendientes/Vencidas), no por el historial — así es 100% predecible y
+      // no depende de si tuvo cambios posteriores registrados en otro mes.
+      if((p.fecha||'').slice(0,7)===banMesFiltro) cols.cerrado.push(p);
+    }
     else if(isHoy) cols.hoy.push(p);
     else if(isVenc||p.estado==='vencido'){p.estado='vencido';cols.vencido.push(p);}
     else cols.pendiente.push(p);
   });
-  // KPI — siempre sobre el total, no el filtro
-  const tot=promesas.length,pend=cols.pendiente.length+cols.hoy.length;
-  const monTot=promesas.reduce((s,p)=>s+p.monto,0);
-  const monCob=promesas.filter(p=>p.estado==='cobrado').reduce((s,p)=>s+(p.montoReal||p.monto),0);
+  // KPI — sobre lo visible: pendientes/vencidas siempre completas + cerradas del mes
+  const visibles = [...cols.pendiente, ...cols.hoy, ...cols.vencido, ...cols.cerrado];
+  const tot=visibles.length,pend=cols.pendiente.length+cols.hoy.length;
+  const monTot=visibles.reduce((s,p)=>s+p.monto,0);
+  const monCob=cols.cerrado.filter(p=>p.estado==='cobrado').reduce((s,p)=>s+(p.montoReal||p.monto),0);
   const monPend  = cols.pendiente.reduce((s,p)=>s+p.monto,0);
   const monHoy   = cols.hoy.reduce((s,p)=>s+p.monto,0);
   const monVenc  = cols.vencido.reduce((s,p)=>s+p.monto,0);
@@ -4273,14 +4698,7 @@ function renderBandeja(){
     {l:'Vencidas sin cobro',v:String(cols.vencido.length),n:fmt(monVenc)+' sin cobrar',c:'#DC2626',bg:'#FEF2F2',icon:'⚠️'},
     {l:'Comprometido total',v:fmt(monTot),      n:`${fmt(monCob)} cobrado`,             c:'#5F7857',bg:'#F0FDF4',icon:'💰'}
   ].map(c=>`<div class="kpi"><div class="kpi-top"><div><div class="kpi-l">${c.l}</div></div><div class="kpi-icon" style="background:${c.bg}">${c.icon}</div></div><div class="kpi-v" style="color:${c.c}">${c.v}</div><div class="kpi-n">${c.n}</div></div>`).join('');
-  // Meta bar en bandeja
-  const pctMeta=Math.min(100,Math.round(monCob/META_SEM_PESOS*100));
-  const metaColor=pctMeta>=80?'#5F7857':pctMeta>=50?'#D97706':'#DC2626';
-  document.getElementById('banMetaBar').innerHTML=`
-    <span style="white-space:nowrap">Meta sem: <strong style="color:${metaColor}">${pctMeta}%</strong></span>
-    <div style="width:80px;height:6px;background:var(--border);border-radius:3px;overflow:hidden">
-      <div style="width:${pctMeta}%;height:6px;background:${metaColor};border-radius:3px;transition:width .4s"></div>
-    </div>`;
+  renderBanMetaSemanal();
   // Columns
   const colDefs=[
     {key:'pendiente',label:'Pendientes',cls:'col-pendiente'},
