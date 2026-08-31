@@ -462,6 +462,10 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
       <span id="focosDot" style="display:none;width:7px;height:7px;border-radius:50%;background:#DC2626;margin-left:auto"></span>
     </button>
     <div class="sb-section-lbl">Sistema</div>
+    <button class="sb-item" onclick="showSec('uen',this)">
+      <span class="sb-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+      Por UEN
+    </button>
     <button class="sb-item" onclick="showSec('config',this)">
       <span class="sb-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
       Configuración
@@ -789,8 +793,12 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
       <div class="topbar-sub" id="carteraSubtitle">Sube el reporte de facturación para ver el cruce con gestión activa</div>
     </div>
     <div class="topbar-actions" style="display:flex;gap:8px;align-items:center">
-      <label class="btn btn-primary btn-sm" style="cursor:pointer">
-        📤 Subir reporte (CSV/Excel)
+      <label class="btn btn-primary btn-sm" style="cursor:pointer;background:#0F766E;border-color:#0F766E">
+        🔒 Cargar CXC actualizado (Savio)
+        <input type="file" id="carteraFoliosFile" accept=".csv" style="display:none" onchange="importarCarteraFolios(this)">
+      </label>
+      <label class="btn btn-ghost btn-sm" style="cursor:pointer">
+        📤 Subir reporte viejo (CSV/Excel)
         <input type="file" id="carteraFile" accept=".csv,.xlsx,.xls" style="display:none" onchange="importarCartera(this)">
       </label>
       <button class="btn btn-ghost btn-sm" onclick="syncCarteraToSheets()" title="Guardar en Google Sheets" style="background:#E8F5E9;border-color:#A5D6A7;color:#2E7D32">☁️ Sheets</button>
@@ -1208,6 +1216,20 @@ function doGet(e) {
   </div>
 </div>
 
+<!-- ═══ POR UEN ═══ -->
+<div id="sec-uen" class="sec">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Cartera por UEN</div>
+      <div class="topbar-sub" id="uenSubtitle">Cargando…</div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="cargarDatosUEN()">↻ Actualizar</button>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap" id="uenTabButtons"></div>
+  <div id="uenTabContent"></div>
+</div>
+
 </div><!-- /main -->
 
 <!-- MODAL ACTUALIZAR PROMESA -->
@@ -1237,6 +1259,10 @@ function doGet(e) {
 <div class="toast" id="toast"></div>
 
 <script>
+// -- CONEXIÓN FIJA A SHEETS (ya no se pide configurar por dispositivo) --
+const AVX_SHEETS_URL_FIJA = 'https://script.google.com/macros/s/AKfycbyX-iaUI850SBDbAS5vFwdbVwyqWwNReRxiTp4l1eS18B7OPr5odRRCtAP0mlDjOqjNgw/exec';
+localStorage.setItem('avx_sheets_url', AVX_SHEETS_URL_FIJA);
+
 // -- CONFIG --
 const PERSONAS = {
   diana:   {nombre:'Diana Rodríguez', inits:'DR', color:'#2563EB', rol:'Coordinadora de Cobranza'},
@@ -2002,7 +2028,167 @@ function showSec(id,btn){
   if(id==='cartera'){renderCartera();}
   if(id==='focos'){renderFocos();}
   if(id==='rendimiento'){renderRendimiento();}
+  if(id==='uen'){ if(!uenResumenCache) cargarDatosUEN(); else renderUENTabs(); }
 }
+
+// ══════════════════ POR UEN ══════════════════
+const UEN_ORDEN = ['Swatter+Aromatex+Comercializadora','Pestex+Fugaci+Sanitización','Weldex+Intendencia','Aroma Home'];
+const UEN_RESPONSABLES_LABEL = {
+  'Swatter+Aromatex+Comercializadora': 'Mayela Uribe & Diana Rodríguez',
+  'Pestex+Fugaci+Sanitización': 'Jocelyn Vázquez & Yazmín',
+  'Weldex+Intendencia': 'Melanie Ballesteros & Aldo Luna',
+  'Aroma Home': 'Aldo Luna',
+};
+const UEN_META_PROGRAMACIONES = {
+  'Swatter+Aromatex+Comercializadora': 40,
+  'Pestex+Fugaci+Sanitización': 40,
+  'Weldex+Intendencia': 30,
+  'Aroma Home': 0,
+};
+let uenResumenCache = null;
+let uenConsolidado90Cache = null;
+let uenTabActiva = UEN_ORDEN[0];
+
+async function cargarDatosUEN(){
+  const url = localStorage.getItem('avx_sheets_url');
+  if(!url){ document.getElementById('uenSubtitle').textContent = 'Falta configurar la conexión a Sheets'; return; }
+  document.getElementById('uenSubtitle').textContent = 'Cargando…';
+  try {
+    const [resumenResp, consResp] = await Promise.all([
+      fetch(url, { method:'POST', body: JSON.stringify({ action:'getResumenUEN' }) }),
+      fetch(url, { method:'POST', body: JSON.stringify({ action:'getConsolidado90' }) }),
+    ]);
+    uenResumenCache = (await resumenResp.json()).duplas || {};
+    uenConsolidado90Cache = (await consResp.json()).consolidado || null;
+    renderUENTabs();
+  } catch(err){
+    document.getElementById('uenSubtitle').textContent = 'Error al cargar: ' + err.message;
+  }
+}
+
+function fmtMoney(n){ return '$' + Number(n||0).toLocaleString('es-MX', {minimumFractionDigits:0, maximumFractionDigits:0}); }
+
+function renderUENTabs(){
+  if(!uenResumenCache){ return; }
+  const tabs = [...UEN_ORDEN, '__marco__'];
+  const btnsHtml = tabs.map(t => {
+    const label = t === '__marco__' ? '⚠️ Marco · +90 días' : t;
+    const active = t === uenTabActiva;
+    return `<button class="btn btn-sm ${active?'btn-primary':'btn-ghost'}" onclick="uenTabActiva='${t.replace(/'/g,"\\'")}';renderUENTabs()">${label}</button>`;
+  }).join('');
+  document.getElementById('uenTabButtons').innerHTML = btnsHtml;
+
+  const cont = document.getElementById('uenTabContent');
+  cont.innerHTML = uenTabActiva === '__marco__' ? renderMarcoTab() : renderDuplaTab(uenTabActiva);
+
+  const totalGeneral = Object.values(uenResumenCache).reduce((s,d)=>s+(d.totalPendiente||0),0);
+  document.getElementById('uenSubtitle').textContent = `Total cartera: ${fmtMoney(totalGeneral)}`;
+}
+
+function renderDuplaTab(dupla){
+  const d = uenResumenCache[dupla];
+  if(!d) return `<div class="panel"><div class="panel-body">Sin datos todavía para ${dupla}. Carga el CXC actualizado primero.</div></div>`;
+
+  const agingOrden = ['Vigente','1-30','31-60','61-90','91-180','181-365','365+'];
+  const agingRows = agingOrden.map(b => `
+    <tr><td>${b}</td><td style="text-align:right">${fmtMoney(d.aging[b]||0)}</td></tr>
+  `).join('');
+
+  const meta = UEN_META_PROGRAMACIONES[dupla];
+  const pct = d.pctCobradoSemana;
+  const pctHtml = (pct === null || pct === undefined)
+    ? `<div style="color:var(--ink3);font-size:12px">Aún no hay una carga anterior con qué comparar — se activa desde la segunda carga semanal.</div>`
+    : `<div style="font-weight:700;font-size:22px;color:${pct>=90?'var(--sage)':'var(--wine)'}">${pct}%</div>
+       <div style="font-size:12px;color:var(--ink3)">cobrado esta semana vs. semana anterior (solo cartera sin crédito, meta 90%)</div>`;
+
+  const top20Rows = d.top20.map((c,i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>${c.cliente}</td>
+      <td style="text-align:right">${fmtMoney(c.pendiente)}</td>
+      <td style="text-align:center">${c.vencido ? '<span style="color:var(--wine);font-weight:600">Vencido</span>' : '<span style="color:var(--sage)">Al corriente</span>'}</td>
+      <td style="text-align:center">${c.tieneCredito ? '<span class="pc-uen">Crédito</span>' : '<span class="pc-uen" style="background:var(--sage-lt);color:var(--sage)">Contado</span>'}</td>
+    </tr>
+  `).join('');
+
+  return `
+    <div class="panel" style="margin-bottom:1rem">
+      <div class="panel-h"><span class="panel-t">${dupla}</span><span style="font-size:12px;color:var(--ink3)">${UEN_RESPONSABLES_LABEL[dupla]}</span></div>
+      <div class="panel-body" style="display:flex;gap:2rem;flex-wrap:wrap">
+        <div>
+          <div style="font-size:12px;color:var(--ink3)">Total pendiente</div>
+          <div style="font-weight:700;font-size:22px">${fmtMoney(d.totalPendiente)}</div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--ink3)">Sin crédito (base del 90%)</div>
+          <div style="font-weight:700;font-size:22px">${fmtMoney(d.sinCreditoTotal)}</div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--ink3)">% cobrado semana (meta 90%)</div>
+          ${pctHtml}
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--ink3)">Meta programaciones/semana</div>
+          <div style="font-weight:700;font-size:22px">${meta > 0 ? meta : '—'}</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:1rem;flex-wrap:wrap">
+      <div class="panel" style="flex:1;min-width:240px">
+        <div class="panel-h"><span class="panel-t">Buckets de antigüedad</span></div>
+        <div class="panel-body"><table class="dt"><tbody>${agingRows}</tbody></table></div>
+      </div>
+      <div class="panel" style="flex:2;min-width:400px">
+        <div class="panel-h"><span class="panel-t">Top 20 clientes</span></div>
+        <div class="panel-body" style="overflow-x:auto"><table class="dt">
+          <thead><tr><th>#</th><th>Cliente</th><th>Pendiente</th><th>Estatus</th><th>Crédito</th></tr></thead>
+          <tbody>${top20Rows}</tbody>
+        </table></div>
+      </div>
+    </div>
+  `;
+}
+
+function renderMarcoTab(){
+  const c = uenConsolidado90Cache;
+  if(!c) return `<div class="panel"><div class="panel-body">Sin datos todavía. Carga el CXC actualizado primero.</div></div>`;
+
+  const porDuplaRows = Object.keys(c.porDupla).map(k => `
+    <tr><td>${k}</td><td style="text-align:right">${fmtMoney(c.porDupla[k])}</td></tr>
+  `).join('');
+
+  const secciones = Object.keys(c.top20PorDupla).map(dupla => {
+    const rows = c.top20PorDupla[dupla].map((cl,i) => `
+      <tr><td>${i+1}</td><td>${cl.cliente}</td><td style="text-align:right">${fmtMoney(cl.pendiente)}</td></tr>
+    `).join('');
+    return `
+      <div class="panel" style="margin-bottom:1rem">
+        <div class="panel-h"><span class="panel-t">${dupla}</span></div>
+        <div class="panel-body" style="overflow-x:auto"><table class="dt">
+          <thead><tr><th>#</th><th>Cliente</th><th>Pendiente +90</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="panel" style="margin-bottom:1rem">
+      <div class="panel-h"><span class="panel-t">Consolidado +90 días — todas las UEN</span></div>
+      <div class="panel-body" style="display:flex;gap:2rem;flex-wrap:wrap">
+        <div>
+          <div style="font-size:12px;color:var(--ink3)">Total +90 días</div>
+          <div style="font-weight:700;font-size:22px;color:var(--wine)">${fmtMoney(c.totalPendiente)}</div>
+        </div>
+        <div style="flex:1;min-width:240px">
+          <table class="dt"><tbody>${porDuplaRows}</tbody></table>
+        </div>
+      </div>
+    </div>
+    ${secciones}
+  `;
+}
+
 
 
 // ── SYNC CARTERA VENCIDA ↔ SHEETS ──
@@ -2510,6 +2696,102 @@ function clienteTienePromesaActiva(nombreCliente){
     if(!pn) return false;
     return pn===nb || pn.includes(nb) || nb.includes(pn);
   });
+}
+
+// ── CARGA NUEVA: CXC de Savio, formato por folio, con candado PIN ──
+async function importarCarteraFolios(input){
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+
+  const url = localStorage.getItem('avx_sheets_url');
+  if (!url) { toast('Falta la conexión a Sheets', 'warn'); return; }
+
+  const pin = window.prompt('PIN para cargar cartera:');
+  if (!pin) return;
+
+  const reader = new FileReader();
+  reader.onerror = () => toast('Error al leer el archivo', 'warn');
+  reader.onload = async (e) => {
+    const text = e.target.result;
+    const sep = text.split('\n')[0].includes(';') && !text.split('\n')[0].includes(',') ? ';' : ',';
+    const lines = text.replace(/\r/g, '').split('\n').filter(l => l.trim());
+    if (lines.length < 2) { toast('Archivo vacío o inválido', 'warn'); return; }
+
+    const parseLine = (line) => {
+      const out = []; let cur = ''; let inQ = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"') { inQ = !inQ; continue; }
+        if (c === sep && !inQ) { out.push(cur); cur = ''; continue; }
+        cur += c;
+      }
+      out.push(cur);
+      return out;
+    };
+
+    const headers = parseLine(lines[0]).map(h => h.trim());
+    const idx = (name) => headers.findIndex(h => h.toLowerCase().trim() === name.toLowerCase());
+    const cols = {
+      serie: idx('Serie de Folio'), folio: idx('Folio'), cliente: idx('Cliente'),
+      razonSocial: idx('Razon Social'), concepto: idx('Concepto'), uen: idx('UEN'),
+      pendiente: idx('Pendiente'), fechaCobro: idx('Fecha de Cobro'),
+      fechaVencimiento: idx('Fecha de Vencimiento'), terminosPago: idx('Terminos de pago'),
+      estatus: idx('Estatus'),
+    };
+    if (cols.cliente < 0 || cols.uen < 0 || cols.pendiente < 0) {
+      toast('El archivo no tiene el formato esperado de Savio (faltan columnas Cliente/UEN/Pendiente)', 'warn');
+      return;
+    }
+
+    const mesesIdx = { ene:0,feb:1,mar:2,abr:3,may:4,jun:5,jul:6,ago:7,sep:8,oct:9,nov:10,dic:11 };
+    const aISO = (s) => {
+      const p = String(s || '').trim().toLowerCase().split('-');
+      if (p.length !== 3 || !(p[1] in mesesIdx)) return '';
+      return `20${p[2]}-${String(mesesIdx[p[1]]+1).padStart(2,'0')}-${String(parseInt(p[0])).padStart(2,'0')}`;
+    };
+
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+      const c = parseLine(lines[i]);
+      const cliente = (c[cols.cliente] || '').trim();
+      if (!cliente) continue;
+      rows.push({
+        serie: (c[cols.serie]||'').trim(),
+        folio: (c[cols.folio]||'').trim(),
+        cliente,
+        razonSocial: (c[cols.razonSocial]||'').trim(),
+        concepto: (c[cols.concepto]||'').trim(),
+        uen: (c[cols.uen]||'').trim(),
+        pendiente: parseMoneyStr(c[cols.pendiente]),
+        fechaCobro: aISO(c[cols.fechaCobro]),
+        fechaVencimiento: aISO(c[cols.fechaVencimiento]),
+        terminosPago: (c[cols.terminosPago]||'').trim(),
+        estatus: (c[cols.estatus]||'').trim(),
+      });
+    }
+
+    if (rows.length === 0) { toast('No se encontraron filas válidas', 'warn'); return; }
+
+    toast(`Subiendo ${rows.length} folios...`, 'warn');
+    try {
+      const resp = await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'syncCarteraFolios', pin, rows }),
+      });
+      const data = await resp.json();
+      if (data.ok) {
+        toast(`✓ Cartera actualizada · ${data.filas} folios`);
+        uenResumenCache = null; // fuerza recarga la próxima vez que se vea "Por UEN"
+        uenConsolidado90Cache = null;
+      } else {
+        toast('✗ ' + (data.error || 'No se pudo guardar — revisa el PIN'), 'warn');
+      }
+    } catch (err) {
+      toast('Error de conexión con Sheets: ' + err.message, 'warn');
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
 }
 
 function importarCartera(input){
