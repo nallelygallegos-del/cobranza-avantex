@@ -436,11 +436,11 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
     </button>
     <button class="sb-item" onclick="showSec('registrar',this)">
       <span class="sb-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
-      Registrar día
+      Registrar gestión
     </button>
     <button class="sb-item" onclick="showSec('bandeja',this)" id="tab-bandeja">
       <span class="sb-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
-      Bandeja de promesas
+      Promesas de pago
       <span class="badge-dot" id="banDot" style="display:none"></span>
     </button>
     <button class="sb-item" onclick="showSec('historial',this)">
@@ -458,11 +458,11 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
     </button>
     <button class="sb-item" onclick="showSec('rendimiento',this)">
       <span class="sb-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></span>
-      Rendimiento
+      Desempeño
     </button>
     <button class="sb-item" onclick="showSec('focos',this)">
       <span class="sb-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
-      Focos rojos
+      Alertas
       <span id="focosDot" style="display:none;width:7px;height:7px;border-radius:50%;background:#DC2626;margin-left:auto"></span>
     </button>
     <div class="sb-section-lbl">Sistema</div>
@@ -500,7 +500,7 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
 <div id="sec-registrar" class="sec">
   <div class="topbar">
     <div>
-      <div class="topbar-title">Registrar mi día</div>
+      <div class="topbar-title">Registrar gestión</div>
       <div class="topbar-sub">Selecciona tu nombre y completa lo que lograste hoy</div>
     </div>
   </div>
@@ -567,7 +567,7 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
 <div id="sec-bandeja" class="sec">
   <div class="topbar">
     <div>
-      <div class="topbar-title">Bandeja de promesas</div>
+      <div class="topbar-title">Promesas de pago</div>
       <div class="topbar-sub">Todas las promesas del equipo · haz clic para actualizar</div>
     </div>
     <div class="topbar-actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -908,7 +908,7 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
 <div id="sec-rendimiento" class="sec">
   <div class="topbar">
     <div>
-      <div class="topbar-title">📊 Rendimiento por segmento</div>
+      <div class="topbar-title">📊 Desempeño por segmento</div>
       <div class="topbar-sub">Por cobrar vs. comprometido vs. pagado vs. sin gestión — comparativo semanal por ejecutivo</div>
     </div>
     <div class="topbar-actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -956,7 +956,7 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
 <div id="sec-focos" class="sec">
   <div class="topbar">
     <div>
-      <div class="topbar-title">🚨 Focos rojos</div>
+      <div class="topbar-title">🚨 Alertas</div>
       <div class="topbar-sub" id="focosSubtitle">Clientes activos con deuda acumulada en 3 o más periodos</div>
     </div>
   </div>
@@ -2211,6 +2211,23 @@ function renderPanelFacturacion(dupla){
   const cfdiSinFactura = (d.cfdi['Sin factura']||0);
   const totalCfdi = Object.values(d.cfdi).reduce((s,v)=>s+v,0) || 1;
 
+  const pendienteCobro = Math.max(0, d.exigible - d.cobradoAplicadoExigible);
+  const pctBarra = d.exigible > 0 ? Math.min(100, Math.round((d.cobradoAplicadoExigible/d.exigible)*1000)/10) : 0;
+
+  // Proyección de cierre: solo tiene sentido si el periodo elegido es el mes
+  // calendario en curso (un mes ya cerrado no se "proyecta", ya es el real).
+  const hoy = new Date();
+  const esMesEnCurso = f.periodo === hoy.toISOString().slice(0,7);
+  let proyeccionHtml = `<div style="font-size:12px;color:var(--ink4);margin-top:4px">Solo disponible para el mes en curso</div>`;
+  if(esMesEnCurso && d.exigible > 0){
+    const diaHoy = hoy.getDate();
+    const diasDelMes = new Date(hoy.getFullYear(), hoy.getMonth()+1, 0).getDate();
+    const proyectado = (d.cobradoAplicadoExigible / diaHoy) * diasDelMes;
+    const pctProyectado = Math.round((proyectado/d.exigible)*1000)/10;
+    proyeccionHtml = `<div style="font-weight:700;font-size:22px;color:${colorSemaforo(calcularSemaforoLocal(pctProyectado))}">${pctProyectado}%</div>
+      <div style="font-size:11px;color:var(--ink4);margin-top:2px">Ritmo actual proyectado al cierre (día ${diaHoy} de ${diasDelMes})</div>`;
+  }
+
   return `
     <div class="panel" style="margin-bottom:1rem">
       <div class="panel-h">
@@ -2222,27 +2239,39 @@ function renderPanelFacturacion(dupla){
       <div class="panel-body">
         <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem">
           <div>
-            <div style="font-size:12px;color:var(--ink3)">Facturado del mes</div>
-            <div style="font-weight:700;font-size:22px">${fmtMoney(d.facturadoMes)}</div>
-          </div>
-          <div>
-            <div style="font-size:12px;color:var(--ink3)">Cobrado y aplicado (mes)</div>
-            <div style="font-weight:700;font-size:22px;color:var(--sage)">${fmtMoney(d.cobradoAplicadoMes)}</div>
-          </div>
-          <div>
-            <div style="font-size:12px;color:var(--ink3)">Exigible (vencido a la fecha)</div>
+            <div style="font-size:12px;color:var(--ink3)">Exigible al día</div>
             <div style="font-weight:700;font-size:22px">${fmtMoney(d.exigible)}</div>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--ink3)">Cobrado y aplicado</div>
+            <div style="font-weight:700;font-size:22px;color:var(--sage)">${fmtMoney(d.cobradoAplicadoExigible)}</div>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--ink3)">Pendiente de cobro</div>
+            <div style="font-weight:700;font-size:22px;color:var(--amber)">${fmtMoney(pendienteCobro)}</div>
           </div>
           <div>
             <div style="font-size:12px;color:var(--ink3)">Cumplimiento real</div>
             <div style="font-weight:700;font-size:22px;color:${colorSemaforo(d.semaforoCumplimiento)}">${d.cumplimientoReal!==null?d.cumplimientoReal+'%':'—'}</div>
           </div>
           <div>
+            <div style="font-size:12px;color:var(--ink3)">Proyección de cierre</div>
+            ${proyeccionHtml}
+          </div>
+          <div>
             <div style="font-size:12px;color:var(--ink3)">Crédito vigente (no exigible aún)</div>
             <div style="font-weight:700;font-size:22px;color:var(--ink3)">${fmtMoney(d.creditoVigenteNoVencido)}</div>
           </div>
         </div>
-        <div style="font-size:12px;color:var(--ink3);margin-bottom:6px">Estatus CFDI (${totalCfdi} folios)</div>
+        <div style="margin-bottom:1rem">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+            <span>Cobrado / Exigible</span><span style="font-weight:600">${fmtMoney(d.cobradoAplicadoExigible)} / ${fmtMoney(d.exigible)} · ${pctBarra}%</span>
+          </div>
+          <div style="background:var(--border);border-radius:6px;height:10px;overflow:hidden">
+            <div style="background:${colorSemaforo(d.semaforoCumplimiento)};height:100%;width:${pctBarra}%"></div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--ink3);margin-bottom:6px">Estatus CFDI del mes seleccionado (${totalCfdi} folios)</div>
         <div style="display:flex;gap:1.5rem;flex-wrap:wrap;font-size:13px">
           <span>✅ Correctamente emitida: <b>${cfdiCorrecta}</b></span>
           <span style="color:var(--wine)">✗ Cancelada: <b>${cfdiCancelada}</b></span>
@@ -2260,36 +2289,105 @@ function renderDuplaTab(dupla){
   if(!d) return `<div class="panel"><div class="panel-body">Sin datos todavía para ${dupla}. Carga el CXC actualizado primero.</div></div>`;
   const ind = uenIndicadoresCache[dupla] || {};
 
-  // ── 4 tarjetas de indicadores ──
-  const tarjetas = `
-    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem">
-      ${tarjetaIndicador('Cartera sana (0-30 ÷ total)', ind.carteraSana, ind.semaforo?.carteraSana)}
-      ${tarjetaIndicador('Recuperación mensual', null, null, 'Estableciendo línea base — disponible en octubre')}
-      ${tarjetaIndicador('Seguimientos vigentes', ind.seguimientosVigentes, ind.semaforo?.seguimientosVigentes, 'Sin clientes vencidos por dar seguimiento')}
-      ${tarjetaIndicador('Promesas cumplidas', ind.promesasCumplidas, ind.semaforo?.promesasCumplidas, 'Sin promesas vencidas todavía')}
+  const agingOrden = ['Vigente','1-30','31-60','61-90','91-180','181-365','365+'];
+  const totalDupla = d.totalPendiente || 0;
+  const cartera90 = (d.aging['91-180']||0) + (d.aging['181-365']||0) + (d.aging['365+']||0);
+  const carteraVencida = totalDupla - (d.aging['Vigente']||0);
+  const pct = (n) => totalDupla > 0 ? Math.round((n/totalDupla)*1000)/10 : null;
+
+  // ── C. KPIs principales: Cartera total / Cartera vencida / +90 / Cartera sana / Recuperación MTD ──
+  const var90 = d.variacion90VsMesAnterior;
+  const var90Html = (var90===null||var90===undefined)
+    ? `<div style="font-size:11px;color:var(--ink4);margin-top:2px">Disponible al cierre del primer periodo</div>`
+    : `<div style="font-size:12px;margin-top:2px;color:${var90<=0?'var(--sage)':'var(--wine)'}">${var90<=0?'↓':'↑'} ${Math.abs(var90)}% vs. mes anterior</div>`;
+
+  const recMTD = uenResumenFacturacionCache && uenResumenFacturacionCache.ok ? uenResumenFacturacionCache.porDupla[dupla] : null;
+
+  const kpis = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1rem;margin-bottom:1rem">
+      <div class="panel"><div class="panel-body">
+        <div style="font-size:12px;color:var(--ink3)">Cartera total</div>
+        <div style="font-weight:700;font-size:24px">${fmtMoney(totalDupla)}</div>
+      </div></div>
+      <div class="panel"><div class="panel-body">
+        <div style="font-size:12px;color:var(--ink3)">Cartera vencida</div>
+        <div style="font-weight:700;font-size:24px;color:var(--amber)">${fmtMoney(carteraVencida)}</div>
+        <div style="font-size:12px;color:var(--ink3);margin-top:2px">${pct(carteraVencida)!==null?pct(carteraVencida)+'% del total':''}</div>
+      </div></div>
+      <div class="panel" style="border-color:var(--wine);border-width:1.5px"><div class="panel-body">
+        <div style="font-size:12px;color:var(--wine);font-weight:600">Cartera +90 días</div>
+        <div style="font-weight:700;font-size:26px;color:var(--wine)">${fmtMoney(cartera90)}</div>
+        <div style="font-size:12px;color:var(--ink3);margin-top:2px">${pct(cartera90)!==null?pct(cartera90)+'% del total':''}</div>
+        ${var90Html}
+        <div style="font-size:11px;color:var(--ink4);margin-top:4px">Meta +90: no definida</div>
+      </div></div>
+      <div class="panel"><div class="panel-body">
+        <div style="font-size:12px;color:var(--ink3)">Cartera sana</div>
+        <div style="font-weight:700;font-size:24px;color:${colorSemaforo(ind.semaforo?.carteraSana)}">${ind.carteraSana!==null&&ind.carteraSana!==undefined?ind.carteraSana+'%':'—'}</div>
+        <div style="font-size:11px;color:var(--ink4);margin-top:2px" title="Vigente + 1-30 días ÷ cartera total">Vigente + 1-30 ÷ total</div>
+      </div></div>
+      <div class="panel"><div class="panel-body">
+        <div style="font-size:12px;color:var(--ink3)">Recuperación del mes</div>
+        ${recMTD ? `
+          <div style="font-weight:700;font-size:24px;color:var(--sage)">${fmtMoney(recMTD.cobradoAplicadoMes)}</div>
+          <div style="font-size:11px;color:var(--ink4);margin-top:2px">Meta mensual: no definida</div>
+        ` : `<div style="font-size:12px;color:var(--ink4);margin-top:4px">Sin información histórica disponible</div>`}
+      </div></div>
     </div>
   `;
 
-  // ── Buckets con barra + semáforo (misma referencia visual: % del bucket
-  //    que está en la franja que le corresponde, no monto — mientras no haya
-  //    metas por bucket, esto es la distribución, no un % de cumplimiento) ──
-  const agingOrden = ['Vigente','1-30','31-60','61-90','91-180','181-365','365+'];
-  const totalDupla = d.totalPendiente || 1;
-  const agingBarras = agingOrden.map(b => {
-    const monto = d.aging[b] || 0;
-    const pct = Math.round((monto / totalDupla) * 1000) / 10;
-    const color = (b==='Vigente'||b==='1-30') ? 'var(--sage)' : (b==='31-60'||b==='61-90') ? 'var(--amber)' : 'var(--wine)';
-    return `
-      <div style="margin-bottom:10px;cursor:pointer" onclick="verClientesBucket('${dupla.replace(/'/g,"\\'")}','${b}')" title="Ver clientes de este bucket">
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
-          <span>${b}</span><span style="color:var(--ink3)">${fmtMoney(monto)}</span>
+  // ── D. Riesgo: Distribución por antigüedad con % y agrupación visual ──
+  const gruposAging = [
+    { label:'CARTERA SANA', buckets:['Vigente','1-30'], color:'var(--sage)' },
+    { label:'ATENCIÓN', buckets:['31-60','61-90'], color:'var(--amber)' },
+    { label:'CARTERA CRÍTICA', buckets:['91-180','181-365','365+'], color:'var(--wine)' },
+  ];
+  const agingHtml = gruposAging.map(g => `
+    <div style="font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--ink3);margin:14px 0 6px 0">${g.label}</div>
+    ${g.buckets.map(b => {
+      const monto = d.aging[b] || 0;
+      const p = pct(monto);
+      return `
+        <div style="margin-bottom:10px;cursor:pointer" onclick="verClientesBucket('${dupla.replace(/'/g,"\\'")}','${b}')" title="Ver clientes de este bucket">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+            <span>${b}</span><span style="color:var(--ink3)">${fmtMoney(monto)}${p!==null?' · '+p+'%':''}</span>
+          </div>
+          <div style="background:var(--border);border-radius:6px;height:8px;overflow:hidden">
+            <div style="background:${g.color};height:100%;width:${Math.min(p||0,100)}%"></div>
+          </div>
         </div>
-        <div style="background:var(--border);border-radius:6px;height:8px;overflow:hidden">
-          <div style="background:${color};height:100%;width:${Math.min(pct,100)}%"></div>
-        </div>
-      </div>
-    `;
-  }).join('');
+      `;
+    }).join('')}
+  `).join('<div style="border-top:1px solid var(--border);margin-top:4px"></div>');
+
+  // ── E. Gestión: Semáforo real (no solo la leyenda) ──
+  const gestHtml = `
+    <div style="margin-bottom:10px">
+      <div style="font-weight:700;font-size:15px">${UEN_RESPONSABLES_LABEL[dupla]}</div>
+      <div style="font-size:12px;color:var(--ink3)">Gestión de cartera vencida</div>
+    </div>
+    <div style="font-weight:700;font-size:30px;color:${colorSemaforo(ind.semaforo?.seguimientosVigentes)}">
+      ${ind.seguimientosVigentes!==null&&ind.seguimientosVigentes!==undefined?ind.seguimientosVigentes+'%':'—'}
+    </div>
+    <div style="font-size:12px;margin-bottom:12px;color:${colorSemaforo(ind.semaforo?.seguimientosVigentes)}">
+      ${ind.seguimientosVigentes===null||ind.seguimientosVigentes===undefined?'Sin gestiones registradas'
+        : ind.seguimientosVigentes>=90?'🟢 En línea':ind.seguimientosVigentes>=80?'🟡 Atención':'🔴 Requiere atención'}
+    </div>
+    <table class="dt" style="width:100%">
+      <tbody>
+        <tr><td>Cartera asignada</td><td style="text-align:right">${fmtMoney(totalDupla)}</td></tr>
+        <tr><td>Gestionado</td><td style="text-align:right;color:var(--sage)">${fmtMoney(ind.gestionadoMonto)}</td></tr>
+        <tr><td>Sin gestión</td><td style="text-align:right;color:var(--wine)">${fmtMoney(ind.sinGestionMonto)}</td></tr>
+        <tr><td>Promesas vigentes</td><td style="text-align:right">${ind.promesasVigentesMonto!==undefined?fmtMoney(ind.promesasVigentesMonto):'—'}</td></tr>
+        <tr><td>Promesas incumplidas</td><td style="text-align:right;color:var(--wine)">${ind.promesasIncumplidasMonto!==undefined?fmtMoney(ind.promesasIncumplidasMonto):'—'}</td></tr>
+        <tr><td>Recuperado MTD</td><td style="text-align:right;color:var(--sage)">${recMTD?fmtMoney(recMTD.cobradoAplicadoMes):'—'}</td></tr>
+        <tr><td>Última gestión</td><td style="text-align:right">${ind.ultimaGestion?new Date(ind.ultimaGestion).toLocaleDateString('es-MX'):'Sin gestiones registradas'}</td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--ink4);display:flex;gap:14px;flex-wrap:wrap">
+      <span>🟢 Verde ≥90%</span><span>🟡 Amarillo 80-89%</span><span>🔴 Rojo &lt;80%</span>
+    </div>
+  `;
 
   // ── Tabla registro operativo de esta dupla ──
   const registroDupla = (uenRegistroCache||[]).filter(r => r.dupla === dupla);
@@ -2317,28 +2415,15 @@ function renderDuplaTab(dupla){
   }).join('');
 
   return `
-    ${tarjetas}
+    ${kpis}
     <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem">
       <div class="panel" style="flex:1;min-width:280px">
         <div class="panel-h"><span class="panel-t">Distribución por antigüedad</span></div>
-        <div class="panel-body">${agingBarras}</div>
+        <div class="panel-body">${agingHtml}</div>
       </div>
-      <div class="panel" style="flex:1;min-width:240px">
+      <div class="panel" style="flex:1;min-width:280px">
         <div class="panel-h"><span class="panel-t">Semáforo de gestión</span></div>
-        <div class="panel-body" style="display:flex;flex-direction:column;gap:10px">
-          <div style="display:flex;gap:10px;align-items:flex-start">
-            <div style="width:10px;height:10px;border-radius:50%;background:var(--sage);margin-top:4px"></div>
-            <div><b>Verde</b><div style="font-size:12px;color:var(--ink3)">90% o más del indicador</div></div>
-          </div>
-          <div style="display:flex;gap:10px;align-items:flex-start">
-            <div style="width:10px;height:10px;border-radius:50%;background:var(--amber);margin-top:4px"></div>
-            <div><b>Amarillo</b><div style="font-size:12px;color:var(--ink3)">Entre 80% y 89%</div></div>
-          </div>
-          <div style="display:flex;gap:10px;align-items:flex-start">
-            <div style="width:10px;height:10px;border-radius:50%;background:var(--wine);margin-top:4px"></div>
-            <div><b>Rojo</b><div style="font-size:12px;color:var(--ink3)">Menos de 80%, o sin gestión</div></div>
-          </div>
-        </div>
+        <div class="panel-body">${gestHtml}</div>
       </div>
     </div>
     ${renderPanelFacturacion(dupla)}
@@ -2453,22 +2538,63 @@ function renderMarcoTab(){
     `;
   }).join('');
 
+  const g = c.gestion || {};
+  const gestHtml = `
+    <div style="margin-bottom:10px">
+      <div style="font-weight:700;font-size:15px">Responsable: Marco</div>
+      <div style="font-size:12px;color:var(--ink3)">Segmento: +90 días · todas las UEN</div>
+    </div>
+    <div style="font-weight:700;font-size:30px;color:${colorSemaforo(calcularSemaforoLocal(g.gestionadoPct))}">
+      ${g.gestionadoPct!==null&&g.gestionadoPct!==undefined?g.gestionadoPct+'%':'—'}
+    </div>
+    <div style="font-size:12px;margin-bottom:12px;color:${colorSemaforo(calcularSemaforoLocal(g.gestionadoPct))}">
+      ${g.gestionadoPct===null||g.gestionadoPct===undefined?'Sin gestiones registradas'
+        : g.gestionadoPct>=90?'🟢 En línea':g.gestionadoPct>=80?'🟡 Atención':'🔴 Requiere atención'}
+    </div>
+    <table class="dt" style="width:100%">
+      <tbody>
+        <tr><td>Cartera asignada (+90)</td><td style="text-align:right">${fmtMoney(c.totalPendiente)}</td></tr>
+        <tr><td>Gestionado</td><td style="text-align:right;color:var(--sage)">${fmtMoney(g.gestionadoMonto)}</td></tr>
+        <tr><td>Sin gestión</td><td style="text-align:right;color:var(--wine)">${fmtMoney(g.sinGestionMonto)}</td></tr>
+        <tr><td>Promesas vigentes</td><td style="text-align:right">${fmtMoney(g.promesasVigentesMonto)}</td></tr>
+        <tr><td>Promesas incumplidas</td><td style="text-align:right;color:var(--wine)">${fmtMoney(g.promesasIncumplidasMonto)}</td></tr>
+        <tr><td>Última gestión</td><td style="text-align:right">${g.ultimaGestion?new Date(g.ultimaGestion).toLocaleDateString('es-MX'):'Sin gestiones registradas'}</td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--ink4);display:flex;gap:14px;flex-wrap:wrap">
+      <span>🟢 Verde ≥90%</span><span>🟡 Amarillo 80-89%</span><span>🔴 Rojo &lt;80%</span>
+    </div>
+  `;
+
   return `
-    <div class="panel" style="margin-bottom:1rem">
-      <div class="panel-h"><span class="panel-t">Consolidado +90 días — todas las UEN</span></div>
-      <div class="panel-body" style="display:flex;gap:2rem;flex-wrap:wrap">
-        <div>
-          <div style="font-size:12px;color:var(--ink3)">Total +90 días</div>
-          <div style="font-weight:700;font-size:22px;color:var(--wine)">${fmtMoney(c.totalPendiente)}</div>
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem">
+      <div class="panel" style="flex:1;min-width:280px">
+        <div class="panel-h"><span class="panel-t">Consolidado +90 días — todas las UEN</span></div>
+        <div class="panel-body">
+          <div style="margin-bottom:14px">
+            <div style="font-size:12px;color:var(--ink3)">Total +90 días</div>
+            <div style="font-weight:700;font-size:26px;color:var(--wine)">${fmtMoney(c.totalPendiente)}</div>
+          </div>
+          <table class="dt" style="width:100%"><tbody>${porDuplaRows}</tbody></table>
         </div>
-        <div style="flex:1;min-width:240px">
-          <table class="dt"><tbody>${porDuplaRows}</tbody></table>
-        </div>
+      </div>
+      <div class="panel" style="flex:1;min-width:280px">
+        <div class="panel-h"><span class="panel-t">Semáforo de gestión</span></div>
+        <div class="panel-body">${gestHtml}</div>
       </div>
     </div>
     ${secciones}
   `;
 }
+
+function calcularSemaforoLocal(pct){
+  if(pct===null||pct===undefined) return null;
+  if(pct>=90) return 'verde';
+  if(pct>=80) return 'amarillo';
+  return 'rojo';
+}
+
+
 
 
 
