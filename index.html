@@ -755,6 +755,7 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
     <div>
       <div class="topbar-title">Calendario de promesas</div>
       <div class="topbar-sub" id="calSubtitle">Visualiza todas las fechas de pago comprometidas</div>
+      <div id="calDebugTemporal" style="font-size:11px;font-family:monospace;background:#FEF3C7;padding:6px 10px;border-radius:6px;margin-top:6px"></div>
     </div>
     <div style="display:flex;gap:.5rem;align-items:center">
       <button class="btn btn-ghost btn-sm" onclick="calNav(-1)">← Anterior</button>
@@ -1546,6 +1547,7 @@ async function syncFromSheets(silent){
     })();
 
     // Replace promesas from Sheets (source of truth)
+    window._debugPromesasServidor = { porMes: data._debugPromesasPorMes, muestra: data._debugPromesasMuestra, totalRecibidas: (data.promesas||[]).length };
     if(data.promesas && data.promesas.length){
       const sheetsIds = new Set(data.promesas.map(p=>String(p.id)));
       // Solo protegemos una promesa "solo local" (que ya no está en Sheets) si se creó
@@ -2348,7 +2350,7 @@ function renderPanelFacturacion(dupla){
               <span style="color:var(--ink4)">— Sin factura: <b>${cfdiSinFactura}</b></span>
             </div>
             <div style="font-size:11px;color:var(--ink4);margin-top:10px">Pagos pendientes de aplicar: no disponible — el archivo de Savio no trae pagos recibidos sin aplicar todavía.</div>
-            ${f._debugHoy ? `<div style="margin-top:10px;padding:8px;background:#FEF3C7;border-radius:6px;font-size:11px;font-family:monospace">🔧 DIAGNÓSTICO TEMPORAL — hoy: <b>${f._debugHoy}</b> · total filas: <b>${f._debugConteo?.totalFilas}</b> · sin fecha vencimiento: <b>${f._debugConteo?.vacias}</b> · ya vencidas: <b>${f._debugConteo?.yaVencidas}</b> · aún no vencen: <b>${f._debugConteo?.aunNoVencen}</b><br>ejemplos sin fecha: ${JSON.stringify(f._debugConteo?.ejemplosVacias)}</div>` : ''}
+            ${f._debugHoy ? `<div style="margin-top:10px;padding:8px;background:#FEF3C7;border-radius:6px;font-size:11px;font-family:monospace">🔧 DIAGNÓSTICO — hoy: <b>${f._debugHoy}</b><br>${Object.entries(f._debugConteoPorDupla||{}).map(([dup,c])=>`<b>${dup}</b>: total=${c.total} · sin fecha=${c.vacias} · ya vencidas=${c.yaVencidas} · aún no vencen=${c.aunNoVencen} · coinciden con periodo "${f.periodo}"=${c.periodoMatch}`).join('<br>')}</div>` : ''}
           </div>
           <div style="flex:1;min-width:220px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:1rem">
             <div style="font-size:12px;color:var(--ink3);margin-bottom:4px">Cobrado / Exigible</div>
@@ -3101,6 +3103,11 @@ function renderCalendario(){
   </div>`).join('');
 
   document.getElementById('calSubtitle').textContent=`${promsDelMes.length} promesa${promsDelMes.length!==1?'s':''} en ${label}`;
+  const _dbgEl = document.getElementById('calDebugTemporal');
+  if(_dbgEl){
+    const dbg = window._debugPromesasServidor;
+    _dbgEl.innerHTML = dbg ? `🔧 DIAGNÓSTICO — total promesas recibidas del servidor: <b>${dbg.totalRecibidas}</b><br>por mes: ${JSON.stringify(dbg.porMes)}<br>muestra: ${JSON.stringify(dbg.muestra)}` : '';
+  }
 
   // Guardar índice por fecha y lista plana del mes para los modales de desglose
   window._calByDate = byDate;
