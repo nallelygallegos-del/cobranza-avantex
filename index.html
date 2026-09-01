@@ -35,16 +35,16 @@ input,select,textarea,button{font-family:var(--font)}
 a{color:inherit}
 
 /* ── SIDEBAR (verde oscuro, texto claro) ── */
-.topnav{position:fixed;top:0;left:0;right:0;height:64px;background:var(--night);display:flex;align-items:center;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.15);padding:0 1.25rem;gap:1rem}
+.topnav{position:fixed;top:0;left:0;right:0;height:72px;background:var(--night);display:flex;align-items:center;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.15);padding:0 1.75rem;gap:1.5rem}
 .sb-brand{display:flex;align-items:center;gap:10px;flex-shrink:0}
 .sb-logo{width:30px;height:30px;border-radius:9px;background:var(--emerald);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .sb-logo svg{width:15px;height:15px;stroke:#fff;fill:none;stroke-width:2.5}
 .sb-brand-name{font-size:15px;font-weight:800;color:#fff;letter-spacing:-.02em}
 .sb-brand-sub{font-size:10px;color:rgba(255,255,255,.55);margin-top:1px}
-.sb-nav{flex:1;display:flex;align-items:center;gap:2px;overflow-x:auto;overflow-y:hidden;height:100%;scrollbar-width:thin}
+.sb-nav{flex:1;display:flex;align-items:center;gap:10px;overflow-x:auto;overflow-y:hidden;height:100%;scrollbar-width:thin}
 .sb-nav::-webkit-scrollbar{height:4px}
 .tn-divider{width:1px;height:26px;background:rgba(255,255,255,.15);margin:0 .5rem;flex-shrink:0}
-.sb-item{display:flex;align-items:center;gap:8px;padding:.5rem .7rem;border-radius:9px;color:rgba(255,255,255,.72);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:none;background:none;text-align:left;position:relative;white-space:nowrap;flex-shrink:0}
+.sb-item{display:flex;align-items:center;gap:9px;padding:.65rem .9rem;border-radius:9px;color:rgba(255,255,255,.72);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:none;background:none;text-align:left;position:relative;white-space:nowrap;flex-shrink:0}
 .sb-item:hover{background:rgba(255,255,255,.08);color:#fff}
 .sb-item.active{background:rgba(255,255,255,.95);color:var(--night)!important;font-weight:700}
 .sb-item.active::before{display:none}
@@ -59,12 +59,15 @@ a{color:inherit}
 .sb-sync{display:flex;align-items:center;gap:6px;font-size:10px;color:rgba(255,255,255,.45);white-space:nowrap}
 .tn-user{display:flex;align-items:center;gap:9px;cursor:pointer;padding:.4rem .6rem;border-radius:9px;transition:background .15s}
 .tn-user:hover{background:rgba(255,255,255,.08)}
+.tn-scroll-arrow{flex-shrink:0;width:26px;height:26px;border-radius:50%;border:none;background:var(--emerald);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;animation:pulseArrow 1.6s ease-in-out infinite}
+.tn-scroll-arrow svg{width:15px;height:15px}
+@keyframes pulseArrow{0%,100%{transform:translateX(0)}50%{transform:translateX(3px)}}
 .sb-item svg{width:16px;height:16px;flex-shrink:0;opacity:.9}
 .sb-item:not(.active) .sb-item-icon svg{stroke:rgba(255,255,255,.8)}
 .sb-item .badge-dot{width:6px;height:6px;border-radius:50%;background:var(--wine);margin-left:auto;flex-shrink:0}
 
 /* ── MAIN AREA ── */
-.main{margin-left:0;margin-top:64px;min-height:calc(100vh - 64px)}
+.main{margin-left:0;margin-top:72px;min-height:calc(100vh - 72px)}
 .topbar{background:var(--surf);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
 .topbar-title{font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
 .topbar-sub{font-size:12px;color:var(--ink3);margin-top:2px}
@@ -432,7 +435,7 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
       <div class="sb-brand-sub">Grupo Avantex</div>
     </div>
   </div>
-  <nav class="sb-nav">
+  <nav class="sb-nav" id="sbNav">
     <button class="sb-item active" onclick="showSec('equipo',this)">
       <span class="sb-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
       Dashboard
@@ -479,6 +482,9 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
       Configuración
     </button>
   </nav>
+  <button class="tn-scroll-arrow" id="tnScrollArrow" onclick="document.getElementById('sbNav').scrollBy({left:220,behavior:'smooth'})" title="Ver más secciones" style="display:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 6 15 12 9 18"/></svg>
+  </button>
   <div class="tn-right">
     <div class="sb-sync" id="sbSyncStatus"><div style="width:6px;height:6px;border-radius:50%;background:#FCD34D"></div><span>Sin conectar</span></div>
     <div class="sb-date" id="navDate"></div>
@@ -1444,7 +1450,7 @@ function showSyncBanner(msg, type='loading'){
   if(!banner){
     banner = document.createElement('div');
     banner.id = 'syncBanner';
-    banner.style.cssText = 'position:fixed;top:64px;left:0;right:0;z-index:90;padding:8px 2rem;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;transition:all .3s';
+    banner.style.cssText = 'position:fixed;top:72px;left:0;right:0;z-index:90;padding:8px 2rem;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;transition:all .3s';
     document.body.appendChild(banner);
   }
   if(type==='loading'){
@@ -2053,6 +2059,18 @@ function showSec(id,btn){
   if(id==='uen'){ if(!uenResumenCache) cargarDatosUEN(); else renderUENTabs(); }
 }
 
+// Flecha que avisa al equipo que hay más secciones deslizando la barra —
+// se muestra solo si de verdad hay contenido oculto a la derecha.
+function actualizarFlechaNav(){
+  const nav = document.getElementById('sbNav');
+  const flecha = document.getElementById('tnScrollArrow');
+  if(!nav || !flecha) return;
+  const hayMasAlaDerecha = nav.scrollWidth - nav.clientWidth - nav.scrollLeft > 8;
+  flecha.style.display = hayMasAlaDerecha ? 'flex' : 'none';
+}
+window.addEventListener('load', () => { actualizarFlechaNav(); document.getElementById('sbNav')?.addEventListener('scroll', actualizarFlechaNav); });
+window.addEventListener('resize', actualizarFlechaNav);
+
 // ══════════════════ POR UEN ══════════════════
 const UEN_ORDEN = ['Swatter+Aromatex+Comercializadora','Pestex+Fugaci+Sanitización','Weldex+Intendencia','Aroma Home'];
 const UEN_RESPONSABLES_LABEL = {
@@ -2300,7 +2318,7 @@ function renderPanelFacturacion(dupla){
       <div class="panel-body">
         <div style="display:flex;gap:1.25rem;flex-wrap:wrap;align-items:stretch">
           <div style="flex:2;min-width:280px">
-            <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1.5rem;margin-bottom:1.25rem">
               <div>
                 <div style="font-size:12px;color:var(--ink3)">Exigible al día</div>
                 <div style="font-weight:700;font-size:22px">${fmtMoney(d.exigible)}</div>
