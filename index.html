@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AVX · Cobranza</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -18,7 +21,7 @@
   --slate:#55606B;--slate-lt:#F7F9FA;
   --bg:#F5F6F8;--surf:#FFFFFF;--border:#E3E6EB;--border2:#CBD1DA;
   --ink:#1F2937;--ink2:#3F4A5A;--ink3:#6B7684;--ink4:#98A2AF;
-  --font:-apple-system,BlinkMacSystemFont,'Segoe UI','SF Pro Display','Helvetica Neue',Arial,sans-serif;
+  --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI','SF Pro Display','Helvetica Neue',Arial,sans-serif;
   --mono:'SF Mono','Cascadia Code','Courier New',monospace;
   --r:10px;--r2:12px;--r3:16px;
   --shadow:0 1px 2px rgba(15,42,74,.06),0 1px 3px rgba(15,42,74,.08);
@@ -32,30 +35,36 @@ input,select,textarea,button{font-family:var(--font)}
 a{color:inherit}
 
 /* ── SIDEBAR (verde oscuro, texto claro) ── */
-.sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--night);border-right:none;display:flex;flex-direction:column;z-index:100;overflow-y:auto}
-.sb-brand{display:flex;align-items:center;gap:10px;padding:1.4rem 1.25rem 1.1rem}
+.topnav{position:fixed;top:0;left:0;right:0;height:64px;background:var(--night);display:flex;align-items:center;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.15);padding:0 1.25rem;gap:1rem}
+.sb-brand{display:flex;align-items:center;gap:10px;flex-shrink:0}
 .sb-logo{width:30px;height:30px;border-radius:9px;background:var(--emerald);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .sb-logo svg{width:15px;height:15px;stroke:#fff;fill:none;stroke-width:2.5}
 .sb-brand-name{font-size:15px;font-weight:800;color:#fff;letter-spacing:-.02em}
 .sb-brand-sub{font-size:10px;color:rgba(255,255,255,.55);margin-top:1px}
-.sb-nav{flex:1;padding:.5rem .75rem}
-.sb-section-lbl{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.4);padding:1rem .6rem .4rem}
-.sb-item{display:flex;align-items:center;gap:11px;padding:.62rem .7rem;border-radius:9px;color:rgba(255,255,255,.72);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left;position:relative}
+.sb-nav{flex:1;display:flex;align-items:center;gap:2px;overflow-x:auto;overflow-y:hidden;height:100%;scrollbar-width:thin}
+.sb-nav::-webkit-scrollbar{height:4px}
+.tn-divider{width:1px;height:26px;background:rgba(255,255,255,.15);margin:0 .5rem;flex-shrink:0}
+.sb-item{display:flex;align-items:center;gap:8px;padding:.5rem .7rem;border-radius:9px;color:rgba(255,255,255,.72);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:none;background:none;text-align:left;position:relative;white-space:nowrap;flex-shrink:0}
 .sb-item:hover{background:rgba(255,255,255,.08);color:#fff}
 .sb-item.active{background:rgba(255,255,255,.95);color:var(--night)!important;font-weight:700}
 .sb-item.active::before{display:none}
-.sb-item svg{width:16px;height:16px;flex-shrink:0;opacity:.9}
-.sb-item-icon{width:26px;height:26px;border-radius:7px;background:rgba(255,255,255,.10);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-item-icon{width:24px;height:24px;border-radius:7px;background:rgba(255,255,255,.10);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-item-icon svg{width:15px;height:15px}
 .sb-item.active .sb-item-icon{background:var(--emerald-lt)}
 .sb-item.active .sb-item-icon svg{stroke:var(--emerald-dk)}
 .sb-item:not(.active) .sb-item-icon svg{stroke:rgba(255,255,255,.8)}
+.sb-item .badge-dot{width:6px;height:6px;border-radius:50%;background:var(--wine);flex-shrink:0}
+.tn-right{display:flex;align-items:center;gap:16px;flex-shrink:0}
+.sb-date{font-size:11px;color:rgba(255,255,255,.45);font-family:var(--mono);white-space:nowrap}
+.sb-sync{display:flex;align-items:center;gap:6px;font-size:10px;color:rgba(255,255,255,.45);white-space:nowrap}
+.tn-user{display:flex;align-items:center;gap:9px;cursor:pointer;padding:.4rem .6rem;border-radius:9px;transition:background .15s}
+.tn-user:hover{background:rgba(255,255,255,.08)}
+.sb-item svg{width:16px;height:16px;flex-shrink:0;opacity:.9}
+.sb-item:not(.active) .sb-item-icon svg{stroke:rgba(255,255,255,.8)}
 .sb-item .badge-dot{width:6px;height:6px;border-radius:50%;background:var(--wine);margin-left:auto;flex-shrink:0}
-.sb-foot{padding:1rem 1.25rem;border-top:1px solid rgba(255,255,255,.12)}
-.sb-date{font-size:11px;color:rgba(255,255,255,.45);font-family:var(--mono)}
-.sb-sync{display:flex;align-items:center;gap:6px;font-size:10px;color:rgba(255,255,255,.45);margin-top:6px}
 
 /* ── MAIN AREA ── */
-.main{margin-left:var(--sidebar-w);min-height:100vh}
+.main{margin-left:0;margin-top:64px;min-height:calc(100vh - 64px)}
 .topbar{background:var(--surf);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
 .topbar-title{font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
 .topbar-sub{font-size:12px;color:var(--ink3);margin-top:2px}
@@ -66,7 +75,7 @@ a{color:inherit}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
 /* sync banner */
-.sync-banner{padding:7px 2rem;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;transition:all .3s;margin-left:var(--sidebar-w)}
+.sync-banner{padding:7px 2rem;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;transition:all .3s}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ── KPI GRID ── */
@@ -406,7 +415,7 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
 .bk-delta.neu{background:#F3F4F6;color:#6B7280}
 
 @media(max-width:1100px){.dash-grid{grid-template-columns:1fr}.dash-grid-3{grid-template-columns:1fr}.dash-grid-32{grid-template-columns:1fr}.meta-hero{grid-template-columns:1fr}.big-kpi-row{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:900px){.sidebar{transform:translateX(-100%)}.main{margin-left:0}.sync-banner{margin-left:0}.bandeja-cols{grid-template-columns:repeat(2,1fr)}.team-grid{grid-template-columns:1fr 1fr}.act-strip{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){.topnav{padding:0 .75rem}.sb-brand-sub{display:none}.tn-right .sb-date{display:none}.main{margin-left:0}.sync-banner{margin-left:0}.bandeja-cols{grid-template-columns:repeat(2,1fr)}.team-grid{grid-template-columns:1fr 1fr}.act-strip{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.form-grid{grid-template-columns:1fr}.fc.full{grid-column:span 1}.bandeja-cols{grid-template-columns:1fr}.team-grid{grid-template-columns:1fr}.add-row{grid-template-columns:1fr 1fr;row-gap:8px}.add-row .btn{grid-column:span 2}.summary-strip{grid-template-columns:repeat(2,1fr)}.act-strip{grid-template-columns:1fr 1fr}.big-kpi-row{grid-template-columns:1fr 1fr}.mh-kpi-row{grid-template-columns:1fr 1fr}.mh-cobrado{font-size:32px}#banKpi{grid-template-columns:1fr 1fr!important}}
 @media(max-width:420px){#banKpi{grid-template-columns:1fr!important}}
 </style>
@@ -415,7 +424,7 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
 <body>
 
 <!-- SIDEBAR -->
-<aside class="sidebar">
+<header class="topnav">
   <div class="sb-brand">
     <div class="sb-logo"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
     <div>
@@ -424,12 +433,11 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
     </div>
   </div>
   <nav class="sb-nav">
-    <div class="sb-section-lbl">Visión general</div>
     <button class="sb-item active" onclick="showSec('equipo',this)">
       <span class="sb-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
       Dashboard
     </button>
-    <div class="sb-section-lbl">Operación</div>
+    <span class="tn-divider"></span>
     <button class="sb-item" onclick="showSec('uen',this)">
       <span class="sb-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
       Por UEN
@@ -454,7 +462,7 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
     <button class="sb-item" onclick="showSec('cartera',this)">
       <span class="sb-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H3a1 1 0 0 0-1 1v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a1 1 0 0 0-1-1Z"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="2" y1="12" x2="22" y2="12"/></svg></span>
       Cartera vencida
-      <span id="carteraDot" style="display:none;width:7px;height:7px;border-radius:50%;background:#DC2626;margin-left:auto"></span>
+      <span id="carteraDot" style="display:none;width:7px;height:7px;border-radius:50%;background:#DC2626"></span>
     </button>
     <button class="sb-item" onclick="showSec('rendimiento',this)">
       <span class="sb-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></span>
@@ -463,26 +471,26 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
     <button class="sb-item" onclick="showSec('focos',this)">
       <span class="sb-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
       Alertas
-      <span id="focosDot" style="display:none;width:7px;height:7px;border-radius:50%;background:#DC2626;margin-left:auto"></span>
+      <span id="focosDot" style="display:none;width:7px;height:7px;border-radius:50%;background:#DC2626"></span>
     </button>
-    <div class="sb-section-lbl">Sistema</div>
+    <span class="tn-divider"></span>
     <button class="sb-item" onclick="showSec('config',this)">
       <span class="sb-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
       Configuración
     </button>
   </nav>
-  <div class="sb-foot">
-    <div class="sb-date" id="navDate"></div>
+  <div class="tn-right">
     <div class="sb-sync" id="sbSyncStatus"><div style="width:6px;height:6px;border-radius:50%;background:#FCD34D"></div><span>Sin conectar</span></div>
-  </div>
-  <div style="padding:.85rem 1rem;border-top:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:9px;cursor:pointer" onclick="showSec('registrar',document.querySelector('.sb-item[onclick*=registrar]'))" title="Selecciona tu usuario en Registrar día">
-    <div id="sbUserAvatar" style="width:32px;height:32px;border-radius:9px;background:var(--emerald);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">NG</div>
-    <div style="min-width:0">
-      <div id="sbUserName" style="font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Nallely Gallegos</div>
-      <div id="sbUserRole" style="font-size:10px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Gerente de Adm. y Cobranza</div>
+    <div class="sb-date" id="navDate"></div>
+    <div class="tn-user" onclick="showSec('registrar',document.querySelector('.sb-item[onclick*=registrar]'))" title="Selecciona tu usuario en Registrar gestión">
+      <div id="sbUserAvatar" style="width:32px;height:32px;border-radius:9px;background:var(--emerald);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">NG</div>
+      <div style="min-width:0">
+        <div id="sbUserName" style="font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px">Nallely Gallegos</div>
+        <div id="sbUserRole" style="font-size:10px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px">Gerente de Adm. y Cobranza</div>
+      </div>
     </div>
   </div>
-</aside>
+</header>
 
 <!-- MAIN -->
 <div class="main">
@@ -1235,7 +1243,8 @@ function doGet(e) {
     </div>
   </div>
 
-  <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap" id="uenTabButtons"></div>
+  <div id="uenTabButtons"></div>
+  <div id="uenExportBtnWrap" style="margin-bottom:1rem"></div>
   <div id="uenTabContent"></div>
 </div>
 
@@ -1435,7 +1444,7 @@ function showSyncBanner(msg, type='loading'){
   if(!banner){
     banner = document.createElement('div');
     banner.id = 'syncBanner';
-    banner.style.cssText = 'position:fixed;top:0;left:236px;right:0;z-index:90;padding:8px 2rem;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;transition:all .3s';
+    banner.style.cssText = 'position:fixed;top:64px;left:0;right:0;z-index:90;padding:8px 2rem;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;transition:all .3s';
     document.body.appendChild(banner);
   }
   if(type==='loading'){
@@ -2064,6 +2073,7 @@ let uenIndicadoresCache = {};
 let uenRegistroCache = [];
 let uenResumenFacturacionCache = null;
 let uenPeriodoFacturacionSeleccionado = null;
+let uenPrioridadesCache = {};
 let uenTabActiva = UEN_ORDEN[0];
 
 async function cargarDatosUEN(){
@@ -2071,12 +2081,13 @@ async function cargarDatosUEN(){
   if(!url){ document.getElementById('uenSubtitle').textContent = 'Falta configurar la conexión a Sheets'; return; }
   document.getElementById('uenSubtitle').textContent = 'Cargando…';
   try {
-    const [resumenResp, consResp, indResp, regResp, factResp] = await Promise.all([
+    const [resumenResp, consResp, indResp, regResp, factResp, prioResp] = await Promise.all([
       fetch(url, { method:'POST', body: JSON.stringify({ action:'getResumenUEN' }) }),
       fetch(url, { method:'POST', body: JSON.stringify({ action:'getConsolidado90' }) }),
       fetch(url, { method:'POST', body: JSON.stringify({ action:'getIndicadoresOperativos' }) }),
       fetch(url, { method:'POST', body: JSON.stringify({ action:'getRegistroOperativo' }) }),
       fetch(url, { method:'POST', body: JSON.stringify({ action:'getResumenFacturacion', periodo: uenPeriodoFacturacionSeleccionado }) }),
+      fetch(url, { method:'POST', body: JSON.stringify({ action:'getPrioridadesHoy' }) }),
     ]);
     uenResumenCache = (await resumenResp.json()).duplas || {};
     uenConsolidado90Cache = (await consResp.json()).consolidado || null;
@@ -2084,6 +2095,7 @@ async function cargarDatosUEN(){
     uenRegistroCache = (await regResp.json()).registro || [];
     uenResumenFacturacionCache = await factResp.json();
     if(uenResumenFacturacionCache && uenResumenFacturacionCache.ok) uenPeriodoFacturacionSeleccionado = uenResumenFacturacionCache.periodo;
+    uenPrioridadesCache = (await prioResp.json()).prioridades || {};
     renderUENTabs();
   } catch(err){
     document.getElementById('uenSubtitle').textContent = 'Error al cargar: ' + err.message;
@@ -2208,16 +2220,24 @@ function bgSemaforo(s){
 
 function renderUENTabs(){
   if(!uenResumenCache){ return; }
-  const tabs = [...UEN_ORDEN, '__marco__'];
-  const btnsHtml = tabs.map(t => {
-    const label = t === '__marco__' ? '⚠️ Marco · +90 días' : t;
+  const duplaBtns = UEN_ORDEN.map(t => {
     const active = t === uenTabActiva;
-    return `<button class="btn btn-sm ${active?'btn-primary':'btn-ghost'}" onclick="uenTabActiva='${t.replace(/'/g,"\\'")}';renderUENTabs()">${label}</button>`;
+    return `<button class="btn btn-sm ${active?'btn-primary':'btn-ghost'}" onclick="uenTabActiva='${t.replace(/'/g,"\\'")}';renderUENTabs()">${t}</button>`;
   }).join('');
+  const marcoActive = uenTabActiva === '__marco__';
+  const marcoBtn = `<button class="btn btn-sm ${marcoActive?'btn-primary':'btn-ghost'}" style="border:1px solid ${marcoActive?'var(--emerald)':'var(--wine)'};${marcoActive?'':'color:var(--wine)'}" onclick="uenTabActiva='__marco__';renderUENTabs()">⚠️ Responsable: Marco · Segmento +90 días</button>`;
+
+  document.getElementById('uenTabButtons').innerHTML = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${duplaBtns}</div>
+    <div style="width:1px;align-self:stretch;background:var(--border);margin:0 4px"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${marcoBtn}</div>
+  `;
+  document.getElementById('uenTabButtons').style.cssText = 'display:flex;gap:0;flex-wrap:wrap;align-items:center;margin-bottom:1rem;justify-content:space-between';
+
   const exportBtn = uenTabActiva !== '__marco__'
     ? `<button class="btn btn-ghost btn-sm" onclick="exportarUENExcel('${uenTabActiva.replace(/'/g,"\\'")}')">📥 Exportar a Excel</button>`
     : '';
-  document.getElementById('uenTabButtons').innerHTML = btnsHtml + exportBtn;
+  document.getElementById('uenExportBtnWrap').innerHTML = exportBtn;
 
   const cont = document.getElementById('uenTabContent');
   cont.innerHTML = uenTabActiva === '__marco__' ? renderMarcoTab() : renderDuplaTab(uenTabActiva);
@@ -2278,51 +2298,120 @@ function renderPanelFacturacion(dupla){
         </select>
       </div>
       <div class="panel-body">
-        <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem">
-          <div>
-            <div style="font-size:12px;color:var(--ink3)">Exigible al día</div>
-            <div style="font-weight:700;font-size:22px">${fmtMoney(d.exigible)}</div>
+        <div style="display:flex;gap:1.25rem;flex-wrap:wrap;align-items:stretch">
+          <div style="flex:2;min-width:280px">
+            <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem">
+              <div>
+                <div style="font-size:12px;color:var(--ink3)">Exigible al día</div>
+                <div style="font-weight:700;font-size:22px">${fmtMoney(d.exigible)}</div>
+              </div>
+              <div>
+                <div style="font-size:12px;color:var(--ink3)">Cobrado y aplicado</div>
+                <div style="font-weight:700;font-size:22px;color:var(--sage)">${fmtMoney(d.cobradoAplicadoExigible)}</div>
+              </div>
+              <div>
+                <div style="font-size:12px;color:var(--ink3)">Pendiente de cobro</div>
+                <div style="font-weight:700;font-size:22px;color:var(--amber)">${fmtMoney(pendienteCobro)}</div>
+              </div>
+              <div>
+                <div style="font-size:12px;color:var(--ink3)">Cumplimiento real</div>
+                <div style="font-weight:700;font-size:22px;color:${colorSemaforo(d.semaforoCumplimiento)}">${d.cumplimientoReal!==null?d.cumplimientoReal+'%':'—'}</div>
+              </div>
+              <div>
+                <div style="font-size:12px;color:var(--ink3)">Proyección de cierre</div>
+                ${proyeccionHtml}
+              </div>
+            </div>
+            <div style="font-size:12px;color:var(--ink3);margin-bottom:6px">Estatus CFDI del mes seleccionado (${totalCfdi} folios)</div>
+            <div style="display:flex;gap:1.5rem;flex-wrap:wrap;font-size:13px">
+              <span>✅ Correctamente emitida: <b>${cfdiCorrecta}</b></span>
+              <span style="color:var(--wine)">✗ Cancelada: <b>${cfdiCancelada}</b></span>
+              <span style="color:var(--amber)">⏳ Cancelación pendiente: <b>${cfdiCancelacionPend}</b></span>
+              <span style="color:var(--ink4)">— Sin factura: <b>${cfdiSinFactura}</b></span>
+            </div>
+            <div style="font-size:11px;color:var(--ink4);margin-top:10px">Pagos pendientes de aplicar: no disponible — el archivo de Savio no trae pagos recibidos sin aplicar todavía.</div>
           </div>
-          <div>
-            <div style="font-size:12px;color:var(--ink3)">Cobrado y aplicado</div>
-            <div style="font-weight:700;font-size:22px;color:var(--sage)">${fmtMoney(d.cobradoAplicadoExigible)}</div>
-          </div>
-          <div>
-            <div style="font-size:12px;color:var(--ink3)">Pendiente de cobro</div>
-            <div style="font-weight:700;font-size:22px;color:var(--amber)">${fmtMoney(pendienteCobro)}</div>
-          </div>
-          <div>
-            <div style="font-size:12px;color:var(--ink3)">Cumplimiento real</div>
-            <div style="font-weight:700;font-size:22px;color:${colorSemaforo(d.semaforoCumplimiento)}">${d.cumplimientoReal!==null?d.cumplimientoReal+'%':'—'}</div>
-          </div>
-          <div>
-            <div style="font-size:12px;color:var(--ink3)">Proyección de cierre</div>
-            ${proyeccionHtml}
-          </div>
-          <div>
-            <div style="font-size:12px;color:var(--ink3)">Crédito vigente (no exigible aún)</div>
-            <div style="font-weight:700;font-size:22px;color:var(--ink3)">${fmtMoney(d.creditoVigenteNoVencido)}</div>
+          <div style="flex:1;min-width:220px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:1rem">
+            <div style="font-size:12px;color:var(--ink3);margin-bottom:4px">Cobrado / Exigible</div>
+            <div style="font-weight:800;font-size:22px;letter-spacing:-.02em">${fmtMoney(d.cobradoAplicadoExigible)} <span style="font-size:14px;font-weight:500;color:var(--ink3)">/ ${fmtMoney(d.exigible)}</span></div>
+            <div style="font-weight:700;font-size:26px;color:${colorSemaforo(d.semaforoCumplimiento)};margin:4px 0 8px">${pctBarra}%</div>
+            <div style="background:var(--border);border-radius:6px;height:10px;overflow:hidden">
+              <div style="background:${colorSemaforo(d.semaforoCumplimiento)};height:100%;width:${pctBarra}%"></div>
+            </div>
+            <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)">
+              <div style="font-size:12px;color:var(--ink3)">Crédito vigente (no exigible aún)</div>
+              <div style="font-weight:700;font-size:20px;color:var(--ink2)">${fmtMoney(d.creditoVigenteNoVencido)}</div>
+            </div>
           </div>
         </div>
-        <div style="margin-bottom:1rem">
-          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
-            <span>Cobrado / Exigible</span><span style="font-weight:600">${fmtMoney(d.cobradoAplicadoExigible)} / ${fmtMoney(d.exigible)} · ${pctBarra}%</span>
-          </div>
-          <div style="background:var(--border);border-radius:6px;height:10px;overflow:hidden">
-            <div style="background:${colorSemaforo(d.semaforoCumplimiento)};height:100%;width:${pctBarra}%"></div>
-          </div>
-        </div>
-        <div style="font-size:12px;color:var(--ink3);margin-bottom:6px">Estatus CFDI del mes seleccionado (${totalCfdi} folios)</div>
-        <div style="display:flex;gap:1.5rem;flex-wrap:wrap;font-size:13px">
-          <span>✅ Correctamente emitida: <b>${cfdiCorrecta}</b></span>
-          <span style="color:var(--wine)">✗ Cancelada: <b>${cfdiCancelada}</b></span>
-          <span style="color:var(--amber)">⏳ Cancelación pendiente: <b>${cfdiCancelacionPend}</b></span>
-          <span style="color:var(--ink4)">— Sin factura: <b>${cfdiSinFactura}</b></span>
-        </div>
-        <div style="font-size:11px;color:var(--ink4);margin-top:10px">Pagos pendientes de aplicar: no disponible — el archivo de Savio no trae pagos recibidos sin aplicar todavía.</div>
       </div>
     </div>
   `;
+}
+
+function renderPrioridadesHoy(dupla){
+  const p = uenPrioridadesCache[dupla];
+  if(!p) return `<div style="color:var(--ink4);font-size:12px">Sin datos todavía</div>`;
+
+  const items = [
+    { key:'sinGestion7dias', icon:'⚠️', label:'clientes sin gestión >7 días', color:'var(--wine)', bg:'var(--wine-lt)' },
+    { key:'promesasVencidas', icon:'❗', label:'promesas vencidas', color:'var(--amber)', bg:'var(--amber-lt)' },
+    { key:'mas90SinPromesa', icon:'⚠️', label:'clientes +90 sin promesa de pago', color:'var(--amber)', bg:'var(--amber-lt)' },
+    { key:'comprometidoSemana', icon:'✅', label:'comprometido esta semana', color:'var(--sage)', bg:'var(--sage-lt)' },
+  ];
+
+  return items.map(it => {
+    const d = p[it.key] || { monto:0, clientes:[] };
+    const n = d.clientes.length;
+    const label = it.key==='comprometidoSemana' ? it.label : `${n} ${it.label}`;
+    return `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--border);cursor:pointer" onclick="verDetallePrioridad('${dupla.replace(/'/g,"\\'")}','${it.key}')">
+        <span style="width:26px;height:26px;border-radius:7px;background:${it.bg};color:${it.color};display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">${it.icon}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;color:var(--ink2)">${label}</div>
+          <div style="font-weight:700;font-size:15px;color:${it.color}">${fmtMoney(d.monto)}</div>
+        </div>
+        <span style="color:var(--ink4)">›</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function verDetallePrioridad(dupla, key){
+  const p = uenPrioridadesCache[dupla];
+  if(!p || !p[key]) return;
+  const labels = {
+    sinGestion7dias: 'Sin gestión hace más de 7 días',
+    promesasVencidas: 'Promesas vencidas',
+    mas90SinPromesa: '+90 días sin promesa de pago',
+    comprometidoSemana: 'Comprometido esta semana',
+  };
+  const lista = p[key].clientes;
+  const modal = document.createElement('div');
+  modal.style = 'position:fixed;inset:0;background:rgba(15,42,74,.5);display:flex;align-items:center;justify-content:center;z-index:9999';
+  modal.innerHTML = `
+    <div style="background:var(--surf);border-radius:var(--r2);padding:1.5rem;width:480px;max-height:80vh;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
+        <div>
+          <div style="font-weight:700;font-size:16px">${labels[key]}</div>
+          <div style="font-size:12px;color:var(--ink3)">${dupla} · ${lista.length} clientes · ${fmtMoney(p[key].monto)}</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="this.closest('div[style*=fixed]').remove()">✕</button>
+      </div>
+      <div style="font-size:11px;color:var(--ink4);margin-bottom:.5rem">Clic en un cliente para etiquetarlo en el Registro operativo</div>
+      <table class="dt" style="width:100%">
+        <thead><tr><th>Cliente</th><th>Monto</th><th></th></tr></thead>
+        <tbody>${lista.map(c=>`
+          <tr style="cursor:pointer" onclick="this.closest('div[style*=fixed]').remove();etiquetarClienteDesdeBucket('${dupla.replace(/'/g,"\\'")}','',
+'${c.cliente.replace(/'/g,"\\'")}')">
+            <td>${c.cliente}</td><td style="text-align:right">${fmtMoney(c.monto)}</td><td style="text-align:right;color:var(--emerald)">🏷️</td>
+          </tr>
+        `).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--ink4);padding:1.5rem">Sin pendientes</td></tr>'}</tbody>
+      </table>
+    </div>
+  `;
+  modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
+  document.body.appendChild(modal);
 }
 
 function renderDuplaTab(dupla){
@@ -2344,33 +2433,60 @@ function renderDuplaTab(dupla){
 
   const recMTD = uenResumenFacturacionCache && uenResumenFacturacionCache.ok ? uenResumenFacturacionCache.porDupla[dupla] : null;
 
+  // Meta +90 = 12% de lo facturado del mes (regla de Nallely, no monto fijo —
+  // se recalcula solo cada vez que cambia la facturación del periodo).
+  const META_90_PCT_FACTURACION = 0.12;
+  let meta90Html = `<div style="font-size:11px;color:var(--ink4);margin-top:4px">Meta +90: carga facturación para calcularla (12% de lo facturado)</div>`;
+  if (recMTD && recMTD.facturadoMes > 0) {
+    const meta90 = recMTD.facturadoMes * META_90_PCT_FACTURACION;
+    const arribaDeMeta = cartera90 > meta90;
+    meta90Html = `<div style="font-size:11px;margin-top:4px;color:${arribaDeMeta?'var(--wine)':'var(--sage)'}">
+      Meta +90 (12% facturado): ${fmtMoney(meta90)} ${arribaDeMeta ? `· ⚠️ ${fmtMoney(cartera90-meta90)} arriba de meta` : '· ✓ dentro de meta'}
+    </div>`;
+  }
+
   const kpis = `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1rem;margin-bottom:1rem">
       <div class="panel"><div class="panel-body">
-        <div style="font-size:12px;color:var(--ink3)">Cartera total</div>
-        <div style="font-weight:700;font-size:24px">${fmtMoney(totalDupla)}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="width:28px;height:28px;border-radius:8px;background:var(--emerald-lt);color:var(--emerald);display:flex;align-items:center;justify-content:center;font-size:14px">💼</span>
+          <span style="font-size:11px;font-weight:700;letter-spacing:.03em;color:var(--ink3)">CARTERA TOTAL</span>
+        </div>
+        <div style="font-weight:800;font-size:24px;letter-spacing:-.02em">${fmtMoney(totalDupla)}</div>
       </div></div>
       <div class="panel"><div class="panel-body">
-        <div style="font-size:12px;color:var(--ink3)">Cartera vencida</div>
-        <div style="font-weight:700;font-size:24px;color:var(--amber)">${fmtMoney(carteraVencida)}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="width:28px;height:28px;border-radius:8px;background:var(--amber-lt);color:var(--amber);display:flex;align-items:center;justify-content:center;font-size:14px">⏱️</span>
+          <span style="font-size:11px;font-weight:700;letter-spacing:.03em;color:var(--ink3)">CARTERA VENCIDA</span>
+        </div>
+        <div style="font-weight:800;font-size:24px;letter-spacing:-.02em;color:var(--amber)">${fmtMoney(carteraVencida)}</div>
         <div style="font-size:12px;color:var(--ink3);margin-top:2px">${pct(carteraVencida)!==null?pct(carteraVencida)+'% del total':''}</div>
       </div></div>
       <div class="panel" style="border-color:var(--wine);border-width:1.5px"><div class="panel-body">
-        <div style="font-size:12px;color:var(--wine);font-weight:600">Cartera +90 días</div>
-        <div style="font-weight:700;font-size:26px;color:var(--wine)">${fmtMoney(cartera90)}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="width:28px;height:28px;border-radius:8px;background:var(--wine-lt);color:var(--wine);display:flex;align-items:center;justify-content:center;font-size:14px">🚩</span>
+          <span style="font-size:11px;font-weight:700;letter-spacing:.03em;color:var(--wine)">CARTERA +90 DÍAS</span>
+        </div>
+        <div style="font-weight:800;font-size:26px;letter-spacing:-.02em;color:var(--wine)">${fmtMoney(cartera90)}</div>
         <div style="font-size:12px;color:var(--ink3);margin-top:2px">${pct(cartera90)!==null?pct(cartera90)+'% del total':''}</div>
         ${var90Html}
-        <div style="font-size:11px;color:var(--ink4);margin-top:4px">Meta +90: no definida</div>
+        ${meta90Html}
       </div></div>
       <div class="panel"><div class="panel-body">
-        <div style="font-size:12px;color:var(--ink3)">Cartera sana</div>
-        <div style="font-weight:700;font-size:24px;color:${colorSemaforo(ind.semaforo?.carteraSana)}">${ind.carteraSana!==null&&ind.carteraSana!==undefined?ind.carteraSana+'%':'—'}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="width:28px;height:28px;border-radius:8px;background:var(--sage-lt);color:var(--sage);display:flex;align-items:center;justify-content:center;font-size:14px">✓</span>
+          <span style="font-size:11px;font-weight:700;letter-spacing:.03em;color:var(--ink3)">CARTERA SANA</span>
+        </div>
+        <div style="font-weight:800;font-size:24px;letter-spacing:-.02em;color:${colorSemaforo(ind.semaforo?.carteraSana)}">${ind.carteraSana!==null&&ind.carteraSana!==undefined?ind.carteraSana+'%':'—'}</div>
         <div style="font-size:11px;color:var(--ink4);margin-top:2px" title="Vigente + 1-30 días ÷ cartera total">Vigente + 1-30 ÷ total</div>
       </div></div>
       <div class="panel"><div class="panel-body">
-        <div style="font-size:12px;color:var(--ink3)">Recuperación del mes</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="width:28px;height:28px;border-radius:8px;background:var(--emerald-lt);color:var(--emerald);display:flex;align-items:center;justify-content:center;font-size:14px">📈</span>
+          <span style="font-size:11px;font-weight:700;letter-spacing:.03em;color:var(--ink3)">RECUPERACIÓN DEL MES</span>
+        </div>
         ${recMTD ? `
-          <div style="font-weight:700;font-size:24px;color:var(--sage)">${fmtMoney(recMTD.cobradoAplicadoMes)}</div>
+          <div style="font-weight:800;font-size:24px;letter-spacing:-.02em;color:var(--sage)">${fmtMoney(recMTD.cobradoAplicadoMes)}</div>
           <div style="font-size:11px;color:var(--ink4);margin-top:2px">Meta mensual: no definida</div>
         ` : `<div style="font-size:12px;color:var(--ink4);margin-top:4px">Sin información histórica disponible</div>`}
       </div></div>
@@ -2465,6 +2581,10 @@ function renderDuplaTab(dupla){
       <div class="panel" style="flex:1;min-width:280px">
         <div class="panel-h"><span class="panel-t">Semáforo de gestión</span></div>
         <div class="panel-body">${gestHtml}</div>
+      </div>
+      <div class="panel" style="flex:1;min-width:280px">
+        <div class="panel-h"><span class="panel-t">Prioridades de hoy</span></div>
+        <div class="panel-body">${renderPrioridadesHoy(dupla)}</div>
       </div>
     </div>
     ${renderPanelFacturacion(dupla)}
