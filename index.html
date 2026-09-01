@@ -8,21 +8,21 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  /* Paleta verde nude elegante - identidad nueva */
-  --night:#2E3D32;--night2:#37483C;--night3:#445648;
-  --emerald:#7C9473;--emerald-dk:#5F7857;--emerald-lt:#F1F4EE;--emerald-md:#C9D6C0;
-  --gold:#7C9473;--gold-lt:#F1F4EE;--gold-md:#C9D6C0;
-  --sage:#5F7857;--sage-lt:#F1F4EE;--sage-md:#A8BC9E;
-  --wine:#B5645A;--wine-lt:#FBF1EF;--wine-md:#DFB0AA;
-  --amber:#B08D5C;--amber-lt:#FAF4EA;
-  --slate:#5C6760;--slate-lt:#F8FAF8;
-  --bg:#F7F7F4;--surf:#FFFFFF;--border:#E7E5DE;--border2:#D4D1C6;
-  --ink:#2B2A25;--ink2:#4A4940;--ink3:#80796D;--ink4:#A89F90;
+  /* Paleta navy ejecutiva — identidad Avantex (#1F3864) */
+  --night:#0F2A4A;--night2:#15335A;--night3:#1C3D68;
+  --emerald:#1F3864;--emerald-dk:#152847;--emerald-lt:#EEF1F7;--emerald-md:#B7C3D9;
+  --gold:#1F3864;--gold-lt:#EEF1F7;--gold-md:#B7C3D9;
+  --sage:#2F7D5C;--sage-lt:#EAF6F0;--sage-md:#A9D4C1;
+  --wine:#B23B3B;--wine-lt:#FBEDED;--wine-md:#E3AFAF;
+  --amber:#B8860B;--amber-lt:#FBF3E1;
+  --slate:#55606B;--slate-lt:#F7F9FA;
+  --bg:#F5F6F8;--surf:#FFFFFF;--border:#E3E6EB;--border2:#CBD1DA;
+  --ink:#1F2937;--ink2:#3F4A5A;--ink3:#6B7684;--ink4:#98A2AF;
   --font:-apple-system,BlinkMacSystemFont,'Segoe UI','SF Pro Display','Helvetica Neue',Arial,sans-serif;
   --mono:'SF Mono','Cascadia Code','Courier New',monospace;
   --r:10px;--r2:12px;--r3:16px;
-  --shadow:0 1px 2px rgba(46,61,50,.05),0 1px 3px rgba(46,61,50,.07);
-  --shadow-md:0 8px 24px rgba(46,61,50,.10),0 2px 8px rgba(46,61,50,.05);
+  --shadow:0 1px 2px rgba(15,42,74,.06),0 1px 3px rgba(15,42,74,.08);
+  --shadow-md:0 8px 24px rgba(15,42,74,.12),0 2px 8px rgba(15,42,74,.06);
   --sidebar-w:236px;
 }
 body{font-family:var(--font);background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh}
@@ -430,6 +430,10 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
       Dashboard
     </button>
     <div class="sb-section-lbl">Operación</div>
+    <button class="sb-item" onclick="showSec('uen',this)">
+      <span class="sb-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+      Por UEN
+    </button>
     <button class="sb-item" onclick="showSec('registrar',this)">
       <span class="sb-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
       Registrar día
@@ -462,10 +466,6 @@ table.dt-compact td{padding:.4rem .5rem;font-size:11px;line-height:1.3}
       <span id="focosDot" style="display:none;width:7px;height:7px;border-radius:50%;background:#DC2626;margin-left:auto"></span>
     </button>
     <div class="sb-section-lbl">Sistema</div>
-    <button class="sb-item" onclick="showSec('uen',this)">
-      <span class="sb-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
-      Por UEN
-    </button>
     <button class="sb-item" onclick="showSec('config',this)">
       <span class="sb-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
       Configuración
@@ -2047,6 +2047,8 @@ const UEN_META_PROGRAMACIONES = {
 };
 let uenResumenCache = null;
 let uenConsolidado90Cache = null;
+let uenIndicadoresCache = {};
+let uenRegistroCache = [];
 let uenTabActiva = UEN_ORDEN[0];
 
 async function cargarDatosUEN(){
@@ -2054,12 +2056,16 @@ async function cargarDatosUEN(){
   if(!url){ document.getElementById('uenSubtitle').textContent = 'Falta configurar la conexión a Sheets'; return; }
   document.getElementById('uenSubtitle').textContent = 'Cargando…';
   try {
-    const [resumenResp, consResp] = await Promise.all([
+    const [resumenResp, consResp, indResp, regResp] = await Promise.all([
       fetch(url, { method:'POST', body: JSON.stringify({ action:'getResumenUEN' }) }),
       fetch(url, { method:'POST', body: JSON.stringify({ action:'getConsolidado90' }) }),
+      fetch(url, { method:'POST', body: JSON.stringify({ action:'getIndicadoresOperativos' }) }),
+      fetch(url, { method:'POST', body: JSON.stringify({ action:'getRegistroOperativo' }) }),
     ]);
     uenResumenCache = (await resumenResp.json()).duplas || {};
     uenConsolidado90Cache = (await consResp.json()).consolidado || null;
+    uenIndicadoresCache = (await indResp.json()).indicadores || {};
+    uenRegistroCache = (await regResp.json()).registro || [];
     renderUENTabs();
   } catch(err){
     document.getElementById('uenSubtitle').textContent = 'Error al cargar: ' + err.message;
@@ -2067,6 +2073,13 @@ async function cargarDatosUEN(){
 }
 
 function fmtMoney(n){ return '$' + Number(n||0).toLocaleString('es-MX', {minimumFractionDigits:0, maximumFractionDigits:0}); }
+
+function colorSemaforo(s){
+  return s==='verde' ? 'var(--sage)' : s==='amarillo' ? 'var(--amber)' : s==='rojo' ? 'var(--wine)' : 'var(--ink4)';
+}
+function bgSemaforo(s){
+  return s==='verde' ? 'var(--sage-lt)' : s==='amarillo' ? 'var(--amber-lt)' : s==='rojo' ? 'var(--wine-lt)' : 'var(--slate-lt)';
+}
 
 function renderUENTabs(){
   if(!uenResumenCache){ return; }
@@ -2085,68 +2098,192 @@ function renderUENTabs(){
   document.getElementById('uenSubtitle').textContent = `Total cartera: ${fmtMoney(totalGeneral)}`;
 }
 
-function renderDuplaTab(dupla){
-  const d = uenResumenCache[dupla];
-  if(!d) return `<div class="panel"><div class="panel-body">Sin datos todavía para ${dupla}. Carga el CXC actualizado primero.</div></div>`;
-
-  const agingOrden = ['Vigente','1-30','31-60','61-90','91-180','181-365','365+'];
-  const agingRows = agingOrden.map(b => `
-    <tr><td>${b}</td><td style="text-align:right">${fmtMoney(d.aging[b]||0)}</td></tr>
-  `).join('');
-
-  const meta = UEN_META_PROGRAMACIONES[dupla];
-  const pct = d.pctCobradoSemana;
-  const pctHtml = (pct === null || pct === undefined)
-    ? `<div style="color:var(--ink3);font-size:12px">Aún no hay una carga anterior con qué comparar — se activa desde la segunda carga semanal.</div>`
-    : `<div style="font-weight:700;font-size:22px;color:${pct>=90?'var(--sage)':'var(--wine)'}">${pct}%</div>
-       <div style="font-size:12px;color:var(--ink3)">cobrado esta semana vs. semana anterior (solo cartera sin crédito, meta 90%)</div>`;
-
-  const top20Rows = d.top20.map((c,i) => `
-    <tr>
-      <td>${i+1}</td>
-      <td>${c.cliente}</td>
-      <td style="text-align:right">${fmtMoney(c.pendiente)}</td>
-      <td style="text-align:center">${c.vencido ? '<span style="color:var(--wine);font-weight:600">Vencido</span>' : '<span style="color:var(--sage)">Al corriente</span>'}</td>
-      <td style="text-align:center">${c.tieneCredito ? '<span class="pc-uen">Crédito</span>' : '<span class="pc-uen" style="background:var(--sage-lt);color:var(--sage)">Contado</span>'}</td>
-    </tr>
-  `).join('');
-
+function tarjetaIndicador(titulo, valor, semaforo, notaVacio){
+  const hayValor = valor !== null && valor !== undefined;
   return `
-    <div class="panel" style="margin-bottom:1rem">
-      <div class="panel-h"><span class="panel-t">${dupla}</span><span style="font-size:12px;color:var(--ink3)">${UEN_RESPONSABLES_LABEL[dupla]}</span></div>
-      <div class="panel-body" style="display:flex;gap:2rem;flex-wrap:wrap">
-        <div>
-          <div style="font-size:12px;color:var(--ink3)">Total pendiente</div>
-          <div style="font-weight:700;font-size:22px">${fmtMoney(d.totalPendiente)}</div>
-        </div>
-        <div>
-          <div style="font-size:12px;color:var(--ink3)">Sin crédito (base del 90%)</div>
-          <div style="font-weight:700;font-size:22px">${fmtMoney(d.sinCreditoTotal)}</div>
-        </div>
-        <div>
-          <div style="font-size:12px;color:var(--ink3)">% cobrado semana (meta 90%)</div>
-          ${pctHtml}
-        </div>
-        <div>
-          <div style="font-size:12px;color:var(--ink3)">Meta programaciones/semana</div>
-          <div style="font-weight:700;font-size:22px">${meta > 0 ? meta : '—'}</div>
-        </div>
-      </div>
-    </div>
-    <div style="display:flex;gap:1rem;flex-wrap:wrap">
-      <div class="panel" style="flex:1;min-width:240px">
-        <div class="panel-h"><span class="panel-t">Buckets de antigüedad</span></div>
-        <div class="panel-body"><table class="dt"><tbody>${agingRows}</tbody></table></div>
-      </div>
-      <div class="panel" style="flex:2;min-width:400px">
-        <div class="panel-h"><span class="panel-t">Top 20 clientes</span></div>
-        <div class="panel-body" style="overflow-x:auto"><table class="dt">
-          <thead><tr><th>#</th><th>Cliente</th><th>Pendiente</th><th>Estatus</th><th>Crédito</th></tr></thead>
-          <tbody>${top20Rows}</tbody>
-        </table></div>
+    <div class="panel" style="flex:1;min-width:180px">
+      <div class="panel-body">
+        <div style="font-size:12px;color:var(--ink3);margin-bottom:4px">${titulo}</div>
+        ${hayValor
+          ? `<div style="font-weight:700;font-size:26px;color:${colorSemaforo(semaforo)}">${valor}%</div>`
+          : `<div style="font-size:12px;color:var(--ink4);line-height:1.4">${notaVacio}</div>`}
       </div>
     </div>
   `;
+}
+
+function renderDuplaTab(dupla){
+  const d = uenResumenCache[dupla];
+  if(!d) return `<div class="panel"><div class="panel-body">Sin datos todavía para ${dupla}. Carga el CXC actualizado primero.</div></div>`;
+  const ind = uenIndicadoresCache[dupla] || {};
+
+  // ── 4 tarjetas de indicadores ──
+  const tarjetas = `
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem">
+      ${tarjetaIndicador('Cartera sana (0-30 ÷ total)', ind.carteraSana, ind.semaforo?.carteraSana)}
+      ${tarjetaIndicador('Recuperación mensual', null, null, 'Estableciendo línea base — disponible en octubre')}
+      ${tarjetaIndicador('Seguimientos vigentes', ind.seguimientosVigentes, ind.semaforo?.seguimientosVigentes, 'Sin clientes vencidos por dar seguimiento')}
+      ${tarjetaIndicador('Promesas cumplidas', ind.promesasCumplidas, ind.semaforo?.promesasCumplidas, 'Sin promesas vencidas todavía')}
+    </div>
+  `;
+
+  // ── Buckets con barra + semáforo (misma referencia visual: % del bucket
+  //    que está en la franja que le corresponde, no monto — mientras no haya
+  //    metas por bucket, esto es la distribución, no un % de cumplimiento) ──
+  const agingOrden = ['Vigente','1-30','31-60','61-90','91-180','181-365','365+'];
+  const totalDupla = d.totalPendiente || 1;
+  const agingBarras = agingOrden.map(b => {
+    const monto = d.aging[b] || 0;
+    const pct = Math.round((monto / totalDupla) * 1000) / 10;
+    const color = (b==='Vigente'||b==='1-30') ? 'var(--sage)' : (b==='31-60'||b==='61-90') ? 'var(--amber)' : 'var(--wine)';
+    return `
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+          <span>${b}</span><span style="color:var(--ink3)">${fmtMoney(monto)}</span>
+        </div>
+        <div style="background:var(--border);border-radius:6px;height:8px;overflow:hidden">
+          <div style="background:${color};height:100%;width:${Math.min(pct,100)}%"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // ── Tabla registro operativo de esta dupla ──
+  const registroDupla = (uenRegistroCache||[]).filter(r => r.dupla === dupla);
+  const hoyStr = new Date().toISOString().slice(0,10);
+  const registroFilas = registroDupla.map(r => {
+    const vigente = r.fechaProximaAccion && r.fechaProximaAccion >= hoyStr;
+    const clasifBadge = r.clasificacion && r.clasificacion !== 'Normal'
+      ? `<span class="pc-uen" style="background:var(--emerald-lt);color:var(--emerald-dk)">${r.clasificacion}</span>` : '';
+    return `
+      <tr>
+        <td>${r.cliente}</td>
+        <td>${r.bucket||''}</td>
+        <td>${r.ultimaGestion||''}</td>
+        <td>${r.proximaAccion||''}</td>
+        <td style="color:${vigente?'var(--sage)':'var(--wine)'}">${r.fechaProximaAccion||'—'}</td>
+        <td>${r.origenAtraso||''}</td>
+        <td>${r.responsable||''}</td>
+        <td>${clasifBadge}</td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-ghost btn-sm" onclick='abrirFormRegistro(${JSON.stringify(r).replace(/'/g,"&apos;")})'>✎</button>
+          <button class="btn btn-ghost btn-sm" onclick="eliminarRegistroOperativo('${r.id}')">🗑</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  return `
+    ${tarjetas}
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem">
+      <div class="panel" style="flex:1;min-width:280px">
+        <div class="panel-h"><span class="panel-t">Distribución por antigüedad</span></div>
+        <div class="panel-body">${agingBarras}</div>
+      </div>
+      <div class="panel" style="flex:1;min-width:240px">
+        <div class="panel-h"><span class="panel-t">Semáforo de gestión</span></div>
+        <div class="panel-body" style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <div style="width:10px;height:10px;border-radius:50%;background:var(--sage);margin-top:4px"></div>
+            <div><b>Verde</b><div style="font-size:12px;color:var(--ink3)">90% o más del indicador</div></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <div style="width:10px;height:10px;border-radius:50%;background:var(--amber);margin-top:4px"></div>
+            <div><b>Amarillo</b><div style="font-size:12px;color:var(--ink3)">Entre 80% y 89%</div></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <div style="width:10px;height:10px;border-radius:50%;background:var(--wine);margin-top:4px"></div>
+            <div><b>Rojo</b><div style="font-size:12px;color:var(--ink3)">Menos de 80%, o sin gestión</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-h">
+        <span class="panel-t">Registro operativo</span>
+        <button class="btn btn-primary btn-sm" onclick="abrirFormRegistro(null,'${dupla.replace(/'/g,"\\'")}')">+ Agregar</button>
+      </div>
+      <div class="panel-body" style="overflow-x:auto">
+        <table class="dt">
+          <thead><tr><th>Cliente</th><th>Bucket</th><th>Última gestión</th><th>Próxima acción</th><th>Fecha</th><th>Origen</th><th>Responsable</th><th>Clasif.</th><th></th></tr></thead>
+          <tbody>${registroFilas || '<tr><td colspan="9" style="color:var(--ink4);text-align:center;padding:1.5rem">Sin registros todavía</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// ── Formulario de alta/edición de Registro operativo ──
+function abrirFormRegistro(registroExistente, duplaNueva){
+  const r = registroExistente || { id:'', cliente:'', dupla:duplaNueva||uenTabActiva, bucket:'', ultimaGestion:'', proximaAccion:'', fechaProximaAccion:'', origenAtraso:'', responsable:'', clasificacion:'Normal' };
+  const html = `
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <label>Cliente<input type="text" id="rf_cliente" value="${(r.cliente||'').replace(/"/g,'&quot;')}" class="tb-input" style="width:100%"></label>
+      <label>Bucket
+        <select id="rf_bucket" class="tb-select" style="width:100%">
+          ${['Vigente','1-30','31-60','61-90','91-180','181-365','365+'].map(b=>`<option ${r.bucket===b?'selected':''}>${b}</option>`).join('')}
+        </select>
+      </label>
+      <label>Última gestión<input type="text" id="rf_ultimaGestion" value="${(r.ultimaGestion||'').replace(/"/g,'&quot;')}" class="tb-input" style="width:100%"></label>
+      <label>Próxima acción<input type="text" id="rf_proximaAccion" value="${(r.proximaAccion||'').replace(/"/g,'&quot;')}" class="tb-input" style="width:100%"></label>
+      <label>Fecha próxima acción<input type="date" id="rf_fechaProximaAccion" value="${r.fechaProximaAccion||''}" class="tb-input" style="width:100%"></label>
+      <label>Origen del atraso
+        <select id="rf_origenAtraso" class="tb-select" style="width:100%">
+          ${['Facturación','Cliente','Otro'].map(o=>`<option ${r.origenAtraso===o?'selected':''}>${o}</option>`).join('')}
+        </select>
+      </label>
+      <label>Responsable<input type="text" id="rf_responsable" value="${(r.responsable||'').replace(/"/g,'&quot;')}" class="tb-input" style="width:100%"></label>
+      <label>Clasificación
+        <select id="rf_clasificacion" class="tb-select" style="width:100%">
+          ${['Normal','Legal','Convenio','Disputada'].map(c=>`<option ${r.clasificacion===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </label>
+    </div>
+  `;
+  const modal = document.createElement('div');
+  modal.style = 'position:fixed;inset:0;background:rgba(15,42,74,.5);display:flex;align-items:center;justify-content:center;z-index:9999';
+  modal.innerHTML = `
+    <div style="background:var(--surf);border-radius:var(--r2);padding:1.5rem;width:420px;max-height:85vh;overflow-y:auto">
+      <div style="font-weight:700;font-size:16px;margin-bottom:1rem">${registroExistente ? 'Editar' : 'Nuevo'} registro</div>
+      ${html}
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1.2rem">
+        <button class="btn btn-ghost btn-sm" id="rf_cancelar">Cancelar</button>
+        <button class="btn btn-primary btn-sm" id="rf_guardar">Guardar</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.querySelector('#rf_cancelar').onclick = () => modal.remove();
+  modal.querySelector('#rf_guardar').onclick = async () => {
+    const registro = {
+      id: r.id, cliente: document.getElementById('rf_cliente').value.trim(),
+      dupla: r.dupla, bucket: document.getElementById('rf_bucket').value,
+      ultimaGestion: document.getElementById('rf_ultimaGestion').value.trim(),
+      proximaAccion: document.getElementById('rf_proximaAccion').value.trim(),
+      fechaProximaAccion: document.getElementById('rf_fechaProximaAccion').value,
+      origenAtraso: document.getElementById('rf_origenAtraso').value,
+      responsable: document.getElementById('rf_responsable').value.trim(),
+      clasificacion: document.getElementById('rf_clasificacion').value,
+    };
+    if(!registro.cliente){ toast('Falta el nombre del cliente','warn'); return; }
+    const url = localStorage.getItem('avx_sheets_url');
+    try{
+      const resp = await fetch(url, { method:'POST', body: JSON.stringify({ action:'saveRegistroOperativo', registro }) });
+      const data = await resp.json();
+      if(data.ok){ toast('✓ Guardado'); modal.remove(); await cargarDatosUEN(); }
+      else toast('✗ No se pudo guardar','warn');
+    } catch(err){ toast('Error: '+err.message,'warn'); }
+  };
+}
+
+async function eliminarRegistroOperativo(id){
+  if(!confirm('¿Eliminar este registro?')) return;
+  const url = localStorage.getItem('avx_sheets_url');
+  try{
+    const resp = await fetch(url, { method:'POST', body: JSON.stringify({ action:'deleteRegistroOperativo', id }) });
+    const data = await resp.json();
+    if(data.ok){ toast('✓ Eliminado'); await cargarDatosUEN(); }
+  } catch(err){ toast('Error: '+err.message,'warn'); }
 }
 
 function renderMarcoTab(){
@@ -2188,6 +2325,7 @@ function renderMarcoTab(){
     ${secciones}
   `;
 }
+
 
 
 
