@@ -2100,35 +2100,76 @@ async function cambiarPeriodoFacturacion(periodo){
 
 function fmtMoney(n){ return '$' + Number(n||0).toLocaleString('es-MX', {minimumFractionDigits:0, maximumFractionDigits:0}); }
 
+let verClientesBucketFiltroUEN = 'todas';
+
 function verClientesBucket(dupla, bucket){
+  verClientesBucketFiltroUEN = 'todas';
   const d = uenResumenCache[dupla];
   if(!d || !d.clientesPorBucket) return;
-  const lista = d.clientesPorBucket[bucket] || [];
-  const total = lista.reduce((s,c)=>s+c.monto,0);
-  const filas = lista.map((c,i)=>`
-    <tr><td>${i+1}</td><td>${c.cliente}</td><td style="text-align:right">${fmtMoney(c.monto)}</td></tr>
-  `).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--ink4);padding:1.5rem">Sin clientes en este bucket</td></tr>';
 
   const modal = document.createElement('div');
+  modal.id = 'modalBucketClientes';
+  modal.dataset.dupla = dupla;
+  modal.dataset.bucket = bucket;
   modal.style = 'position:fixed;inset:0;background:rgba(15,42,74,.5);display:flex;align-items:center;justify-content:center;z-index:9999';
   modal.innerHTML = `
-    <div style="background:var(--surf);border-radius:var(--r2);padding:1.5rem;width:480px;max-height:80vh;overflow-y:auto">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+    <div style="background:var(--surf);border-radius:var(--r2);padding:1.5rem;width:520px;max-height:80vh;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
         <div>
           <div style="font-weight:700;font-size:16px">${dupla} — ${bucket}</div>
-          <div style="font-size:12px;color:var(--ink3)">${lista.length} clientes · ${fmtMoney(total)}</div>
+          <div style="font-size:12px;color:var(--ink3)" id="bucketModalResumen"></div>
         </div>
-        <button class="btn btn-ghost btn-sm" onclick="this.closest('div[style*=fixed]').remove()">✕</button>
+        <button class="btn btn-ghost btn-sm" onclick="this.closest('#modalBucketClientes').remove()">✕</button>
       </div>
+      <div style="margin-bottom:.75rem">
+        <select class="tb-select" style="width:100%" id="bucketModalFiltroUEN" onchange="verClientesBucketFiltroUEN=this.value;renderClientesBucketModal()">
+          <option value="todas">Todas las UEN de esta dupla</option>
+          ${(d.uenPresentes||[]).map(u=>`<option value="${u}">${u}</option>`).join('')}
+        </select>
+      </div>
+      <div style="font-size:11px;color:var(--ink4);margin-bottom:.5rem">Clic en un cliente para etiquetarlo en el Registro operativo</div>
       <table class="dt" style="width:100%">
-        <thead><tr><th>#</th><th>Cliente</th><th>Monto</th></tr></thead>
-        <tbody>${filas}</tbody>
+        <thead><tr><th>#</th><th>Cliente</th><th>UEN</th><th>Monto</th><th></th></tr></thead>
+        <tbody id="bucketModalTbody"></tbody>
       </table>
     </div>
   `;
   modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
   document.body.appendChild(modal);
+  renderClientesBucketModal();
 }
+
+function renderClientesBucketModal(){
+  const modal = document.getElementById('modalBucketClientes');
+  if(!modal) return;
+  const dupla = modal.dataset.dupla, bucket = modal.dataset.bucket;
+  const d = uenResumenCache[dupla];
+  const listaCompleta = (d.clientesPorBucket && d.clientesPorBucket[bucket]) || [];
+  const lista = verClientesBucketFiltroUEN==='todas' ? listaCompleta : listaCompleta.filter(c=>c.uen===verClientesBucketFiltroUEN);
+  const total = lista.reduce((s,c)=>s+c.monto,0);
+
+  document.getElementById('bucketModalResumen').textContent = `${lista.length} clientes · ${fmtMoney(total)}`;
+  document.getElementById('bucketModalTbody').innerHTML = lista.map((c,i)=>`
+    <tr style="cursor:pointer" onclick="etiquetarClienteDesdeBucket('${dupla.replace(/'/g,"\\'")}','${bucket}','${c.cliente.replace(/'/g,"\\'")}')">
+      <td>${i+1}</td><td>${c.cliente}</td><td style="font-size:12px;color:var(--ink3)">${c.uen||'—'}</td>
+      <td style="text-align:right">${fmtMoney(c.monto)}</td>
+      <td style="text-align:right;color:var(--emerald)">🏷️</td>
+    </tr>
+  `).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--ink4);padding:1.5rem">Sin clientes en este bucket</td></tr>';
+}
+
+function etiquetarClienteDesdeBucket(dupla, bucket, cliente){
+  document.getElementById('modalBucketClientes')?.remove();
+  const existente = (uenRegistroCache||[]).find(r => r.cliente === cliente && r.dupla === dupla);
+  if(existente){
+    abrirFormRegistro(existente);
+  } else {
+    abrirFormRegistro({ id:'', cliente, dupla, bucket, ultimaGestion:'', proximaAccion:'', fechaProximaAccion:'', origenAtraso:'', responsable:'', clasificacion:'Normal' }, dupla);
+  }
+}
+
+
+
 
 function exportarUENExcel(dupla){
   const d = uenResumenCache[dupla];
@@ -2473,7 +2514,7 @@ function abrirFormRegistro(registroExistente, duplaNueva){
   modal.style = 'position:fixed;inset:0;background:rgba(15,42,74,.5);display:flex;align-items:center;justify-content:center;z-index:9999';
   modal.innerHTML = `
     <div style="background:var(--surf);border-radius:var(--r2);padding:1.5rem;width:420px;max-height:85vh;overflow-y:auto">
-      <div style="font-weight:700;font-size:16px;margin-bottom:1rem">${registroExistente ? 'Editar' : 'Nuevo'} registro</div>
+      <div style="font-weight:700;font-size:16px;margin-bottom:1rem">${r.id ? 'Editar' : 'Nuevo'} registro</div>
       ${html}
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1.2rem">
         <button class="btn btn-ghost btn-sm" id="rf_cancelar">Cancelar</button>
