@@ -2063,6 +2063,7 @@ let uenConsolidado90Cache = null;
 let uenIndicadoresCache = {};
 let uenRegistroCache = [];
 let uenResumenFacturacionCache = null;
+let uenPeriodoFacturacionSeleccionado = null;
 let uenTabActiva = UEN_ORDEN[0];
 
 async function cargarDatosUEN(){
@@ -2075,20 +2076,87 @@ async function cargarDatosUEN(){
       fetch(url, { method:'POST', body: JSON.stringify({ action:'getConsolidado90' }) }),
       fetch(url, { method:'POST', body: JSON.stringify({ action:'getIndicadoresOperativos' }) }),
       fetch(url, { method:'POST', body: JSON.stringify({ action:'getRegistroOperativo' }) }),
-      fetch(url, { method:'POST', body: JSON.stringify({ action:'getResumenFacturacion' }) }),
+      fetch(url, { method:'POST', body: JSON.stringify({ action:'getResumenFacturacion', periodo: uenPeriodoFacturacionSeleccionado }) }),
     ]);
     uenResumenCache = (await resumenResp.json()).duplas || {};
     uenConsolidado90Cache = (await consResp.json()).consolidado || null;
     uenIndicadoresCache = (await indResp.json()).indicadores || {};
     uenRegistroCache = (await regResp.json()).registro || [];
     uenResumenFacturacionCache = await factResp.json();
+    if(uenResumenFacturacionCache && uenResumenFacturacionCache.ok) uenPeriodoFacturacionSeleccionado = uenResumenFacturacionCache.periodo;
     renderUENTabs();
   } catch(err){
     document.getElementById('uenSubtitle').textContent = 'Error al cargar: ' + err.message;
   }
 }
 
+async function cambiarPeriodoFacturacion(periodo){
+  uenPeriodoFacturacionSeleccionado = periodo;
+  const url = localStorage.getItem('avx_sheets_url');
+  const resp = await fetch(url, { method:'POST', body: JSON.stringify({ action:'getResumenFacturacion', periodo }) });
+  uenResumenFacturacionCache = await resp.json();
+  renderUENTabs();
+}
+
 function fmtMoney(n){ return '$' + Number(n||0).toLocaleString('es-MX', {minimumFractionDigits:0, maximumFractionDigits:0}); }
+
+function verClientesBucket(dupla, bucket){
+  const d = uenResumenCache[dupla];
+  if(!d || !d.clientesPorBucket) return;
+  const lista = d.clientesPorBucket[bucket] || [];
+  const total = lista.reduce((s,c)=>s+c.monto,0);
+  const filas = lista.map((c,i)=>`
+    <tr><td>${i+1}</td><td>${c.cliente}</td><td style="text-align:right">${fmtMoney(c.monto)}</td></tr>
+  `).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--ink4);padding:1.5rem">Sin clientes en este bucket</td></tr>';
+
+  const modal = document.createElement('div');
+  modal.style = 'position:fixed;inset:0;background:rgba(15,42,74,.5);display:flex;align-items:center;justify-content:center;z-index:9999';
+  modal.innerHTML = `
+    <div style="background:var(--surf);border-radius:var(--r2);padding:1.5rem;width:480px;max-height:80vh;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <div>
+          <div style="font-weight:700;font-size:16px">${dupla} — ${bucket}</div>
+          <div style="font-size:12px;color:var(--ink3)">${lista.length} clientes · ${fmtMoney(total)}</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="this.closest('div[style*=fixed]').remove()">✕</button>
+      </div>
+      <table class="dt" style="width:100%">
+        <thead><tr><th>#</th><th>Cliente</th><th>Monto</th></tr></thead>
+        <tbody>${filas}</tbody>
+      </table>
+    </div>
+  `;
+  modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
+  document.body.appendChild(modal);
+}
+
+function exportarUENExcel(dupla){
+  const d = uenResumenCache[dupla];
+  if(!d){ toast('Sin datos para exportar', 'warn'); return; }
+
+  const wb = XLSX.utils.book_new();
+
+  const agingRows = ['Vigente','1-30','31-60','61-90','91-180','181-365','365+'].map(b => ({ Bucket: b, Monto: d.aging[b]||0 }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(agingRows), 'Antigüedad');
+
+  const todosClientes = {};
+  Object.values(d.clientesPorBucket||{}).flat().forEach(c => {
+    if(!todosClientes[c.cliente]) todosClientes[c.cliente] = 0;
+    todosClientes[c.cliente] += c.monto;
+  });
+  const clientesRows = Object.entries(todosClientes)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([cliente,monto]) => ({ Cliente: cliente, Pendiente: monto }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(clientesRows), 'Clientes');
+
+  const registroDupla = (uenRegistroCache||[]).filter(r => r.dupla === dupla)
+    .map(r => ({ Cliente:r.cliente, Bucket:r.bucket, 'Última gestión':r.ultimaGestion, 'Próxima acción':r.proximaAccion,
+                 Fecha:r.fechaProximaAccion, Origen:r.origenAtraso, Responsable:r.responsable, Clasificación:r.clasificacion }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(registroDupla), 'Registro operativo');
+
+  const nombreArchivo = `${dupla.replace(/[^a-zA-Z0-9]/g,'_')}_${new Date().toISOString().slice(0,10)}.xlsx`;
+  XLSX.writeFile(wb, nombreArchivo);
+}
 
 function colorSemaforo(s){
   return s==='verde' ? 'var(--sage)' : s==='amarillo' ? 'var(--amber)' : s==='rojo' ? 'var(--wine)' : 'var(--ink4)';
@@ -2105,7 +2173,10 @@ function renderUENTabs(){
     const active = t === uenTabActiva;
     return `<button class="btn btn-sm ${active?'btn-primary':'btn-ghost'}" onclick="uenTabActiva='${t.replace(/'/g,"\\'")}';renderUENTabs()">${label}</button>`;
   }).join('');
-  document.getElementById('uenTabButtons').innerHTML = btnsHtml;
+  const exportBtn = uenTabActiva !== '__marco__'
+    ? `<button class="btn btn-ghost btn-sm" onclick="exportarUENExcel('${uenTabActiva.replace(/'/g,"\\'")}')">📥 Exportar a Excel</button>`
+    : '';
+  document.getElementById('uenTabButtons').innerHTML = btnsHtml + exportBtn;
 
   const cont = document.getElementById('uenTabContent');
   cont.innerHTML = uenTabActiva === '__marco__' ? renderMarcoTab() : renderDuplaTab(uenTabActiva);
@@ -2142,7 +2213,12 @@ function renderPanelFacturacion(dupla){
 
   return `
     <div class="panel" style="margin-bottom:1rem">
-      <div class="panel-h"><span class="panel-t">Facturación y cobranza — ${f.mesActual}</span></div>
+      <div class="panel-h">
+        <span class="panel-t">Facturación y cobranza</span>
+        <select class="tb-select" style="font-size:13px" onchange="cambiarPeriodoFacturacion(this.value)">
+          ${(f.periodosDisponibles||[]).map(p=>`<option value="${p}" ${p===f.periodo?'selected':''}>${p}</option>`).join('')}
+        </select>
+      </div>
       <div class="panel-body">
         <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem">
           <div>
@@ -2204,7 +2280,7 @@ function renderDuplaTab(dupla){
     const pct = Math.round((monto / totalDupla) * 1000) / 10;
     const color = (b==='Vigente'||b==='1-30') ? 'var(--sage)' : (b==='31-60'||b==='61-90') ? 'var(--amber)' : 'var(--wine)';
     return `
-      <div style="margin-bottom:10px">
+      <div style="margin-bottom:10px;cursor:pointer" onclick="verClientesBucket('${dupla.replace(/'/g,"\\'")}','${b}')" title="Ver clientes de este bucket">
         <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
           <span>${b}</span><span style="color:var(--ink3)">${fmtMoney(monto)}</span>
         </div>
